@@ -3316,7 +3316,8 @@ function logIns(){
       isoDate: new Date().toISOString().slice(0,10),
       insulineName: _insName2, type: 'snel'
     });
-    if(doseHistory.length > 90) doseHistory = doseHistory.slice(0,90);
+    if(doseHistory.length > 90) doseHistory = doseHistory.slice(0,90);if(doseHistory.length > 90) doseHistory = doseHistory.slice(0,90);
+    if(document.getElementById('sc-log') && document.getElementById('sc-log').classList.contains('act')) renderLogScreen();
   }
 
   if(insIdx>=0 && doseUnits>0){
@@ -4337,9 +4338,9 @@ function initMedChecklist() {
   syncMedCheckSelected();
 
   var momentMap={
-    ontbijt:      ['ochtend','voor','tijdens','na'],
-    warme_maaltijd:['middag','voor','tijdens','na'],
-    avondmaal:    ['avond','voor','tijdens','na'],
+    ontbijt:      ['ochtend'],
+    warme_maaltijd:['middag'],
+    avondmaal:    ['avond'],
     bedtijd:      ['bedtijd']
   };
   var matchKeys=momentMap[moment]||[];
@@ -4347,7 +4348,7 @@ function initMedChecklist() {
   var relevant=meds.filter(function(m,i){
     if(!medCheckSelected.includes(i)) return false;
     var t=(m.tijdstip||'').split(',').filter(Boolean);
-    return t.length===0||t.some(function(k){return matchKeys.includes(k);});
+    return t.length===0 ? false : t.some(function(k){return matchKeys.includes(k);});
   });
 
   if(relevant.length===0){
@@ -4420,6 +4421,7 @@ function toggleMedCheck(idx) {
       if(medCheckLog.length > 200) medCheckLog = medCheckLog.slice(0,200);
     }
     autosave();
+    if(document.getElementById('sc-log') && document.getElementById('sc-log').classList.contains('act')) renderLogScreen();
   }
 
   // Auto-deduct / restore stock in meds array
@@ -8101,12 +8103,14 @@ function kpConfirm() {
   if(disp) disp.textContent = v;
   if(wrap) wrap.style.borderColor = v<70?'var(--low)':v<=180?'var(--ok)':v<=250?'var(--warn)':'var(--danger)';
   if(disp) disp.style.color = v<70?'var(--low)':v<=180?'var(--ok)':v<=250?'var(--warn)':'var(--danger)';
-
+  var h = new Date().getHours();
   // Add to history
   var time = new Date().toLocaleTimeString('nl-BE',{hour:'2-digit',minute:'2-digit'});
   var dateStr = new Date().toLocaleDateString('nl-BE',{day:'2-digit',month:'2-digit'});
   var mealKeyMap={"Voor ontbijt":"breakfast","Na ontbijt":"breakfast","Nuchter":"breakfast","Voor lunch":"lunch","Na lunch":"lunch","Broodmaaltijd":"lunch","Voor avondmaal":"dinner","Na avondmaal":"dinner","Warme maaltijd":"dinner","Avondmaal":"dinner","Voor bed":"bedtime","Bedtijd":"bedtime","Nacht":"bedtime"};
-  glucoseHistory.unshift({value:v, time:time, date:dateStr, ctx:mCtx, meal:mealKeyMap[mCtx]||curMeal,
+  
+  gvar mealKeyResolved = mealKeyMap[mCtx] || (curMeal&&curMeal!==''?curMeal:null) || (h>=5&&h<10?'breakfast':h>=10&&h<14?'lunch':h>=14&&h<20?'dinner':'bedtime');
+glucoseHistory.unshift({value:v, time:time, date:dateStr, ctx:mCtx, meal:mealKeyResolved,lucoseHistory.unshift({value:v, time:time, date:dateStr, ctx:mCtx, meal:mealKeyMap[mCtx]||curMeal,
     isoDate:new Date().toISOString().slice(0,10),
     fullDate:new Date().toLocaleDateString('nl-BE',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})});
   if(glucoseHistory.length > 30) glucoseHistory = glucoseHistory.slice(0,30);
@@ -8126,9 +8130,11 @@ function kpConfirm() {
   saveData();
   renderGluHistory();
   renderHomeTrends();
+  if(document.getElementById('sc-log') && document.getElementById('sc-log').classList.contains('act')) renderLogScreen();
 
   // Auto-calculate
   calcIns();
+  
   kpStr = '';
 }
 
@@ -8369,7 +8375,17 @@ function renderHomeTrends() {
   var html = "";
   moments.forEach(function(m, mi) {
     var ctxMap={"Voor ontbijt":"breakfast","Na ontbijt":"breakfast","Nuchter":"breakfast","Ontbijt":"breakfast","Voor lunch":"lunch","Na lunch":"lunch","Broodmaaltijd":"lunch","Lunch":"lunch","Voor avondmaal":"dinner","Na avondmaal":"dinner","Warme maaltijd":"dinner","Avondmaal":"dinner","Voor bed":"bedtime","Bedtijd":"bedtime","Nacht":"bedtime"};
-    var entries = glucoseHistory.filter(function(r){ return r.meal===m.key || (ctxMap[r.ctx]===m.key) || r.ctx===m.key; }).slice(0,3);
+    var entries = glucoseHistory.filter(function(r){
+  if(r.meal && r.meal===m.key) return true;
+  if(r.ctx && ctxMap[r.ctx]===m.key) return true;
+  if(r.ctx && r.ctx===m.key) return true;
+  // fallback: als meal ontbreekt, probeer opnieuw afleiden via ctx
+  if(!r.meal && r.ctx) {
+    var afgeleid = ctxMap[r.ctx];
+    if(afgeleid===m.key) return true;
+  }
+  return false;
+}).slice(0,3);
     if(entries.length === 0 && m.key !== momentNow) return; // hide empty non-current
     var isNow = m.key === momentNow;
     html += "<div style=\"margin-bottom:"+(mi<moments.length-1?"10px":"0")+";"+( isNow?"background:var(--bg2);border-radius:12px;padding:8px 10px;":"padding:4px 0;")+"\">";
