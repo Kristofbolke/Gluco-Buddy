@@ -8109,8 +8109,8 @@ function kpConfirm() {
   var dateStr = new Date().toLocaleDateString('nl-BE',{day:'2-digit',month:'2-digit'});
   var mealKeyMap={"Voor ontbijt":"breakfast","Na ontbijt":"breakfast","Nuchter":"breakfast","Voor lunch":"lunch","Na lunch":"lunch","Broodmaaltijd":"lunch","Voor avondmaal":"dinner","Na avondmaal":"dinner","Warme maaltijd":"dinner","Avondmaal":"dinner","Voor bed":"bedtime","Bedtijd":"bedtime","Nacht":"bedtime"};
   
-  gvar mealKeyResolved = mealKeyMap[mCtx] || (curMeal&&curMeal!==''?curMeal:null) || (h>=5&&h<10?'breakfast':h>=10&&h<14?'lunch':h>=14&&h<20?'dinner':'bedtime');
-glucoseHistory.unshift({value:v, time:time, date:dateStr, ctx:mCtx, meal:mealKeyResolved,lucoseHistory.unshift({value:v, time:time, date:dateStr, ctx:mCtx, meal:mealKeyMap[mCtx]||curMeal,
+  var mealKeyResolved = mealKeyMap[mCtx] || (curMeal&&curMeal!==''?curMeal:null) || (h>=5&&h<10?'breakfast':h>=10&&h<14?'lunch':h>=14&&h<20?'dinner':'bedtime');
+  glucoseHistory.unshift({value:v, time:time, date:dateStr, ctx:mCtx, meal:mealKeyResolved,
     isoDate:new Date().toISOString().slice(0,10),
     fullDate:new Date().toLocaleDateString('nl-BE',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})});
   if(glucoseHistory.length > 30) glucoseHistory = glucoseHistory.slice(0,30);
