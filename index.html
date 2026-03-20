@@ -14523,6 +14523,19 @@ if (document.readyState === 'loading') {
 }
 
 // =============================================
+// AUTOMATISCH OPSLAAN — vangnet zodat data nooit verloren gaat
+// =============================================
+// Bij afsluiten / naar achtergrond
+window.addEventListener('pagehide', function() { try { saveData(); } catch(e) {} });
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'hidden') { try { saveData(); } catch(e) {} }
+});
+// Periodiek elke 30 seconden
+setInterval(function() {
+  try { if (typeof saveData === 'function') saveData(); } catch(e) {}
+}, 30000);
+
+// =============================================
 // SERVICE WORKER REGISTRATIE (PWA)
 // =============================================
 if ('serviceWorker' in navigator) {
