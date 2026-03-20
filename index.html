@@ -12911,7 +12911,42 @@ function showOnboarding() {
   if(ob) ob.style.display='block';
   obMeterSlots=0;
   obShowScreen(1);
-  setTimeout(obRefreshAvatarPreview, 50);
+  setTimeout(function() {
+    obPrefillFromPassport();
+    obRefreshAvatarPreview();
+  }, 50);
+}
+
+function obPrefillFromPassport() {
+  var p = passport;
+  if (!p || !p.voornaam) return; // Geen bestaande data
+  function set(id, val) {
+    var el = document.getElementById(id);
+    if (el && val) el.value = val;
+  }
+  // Persoonlijk
+  set('ob-voornaam', p.voornaam);
+  var familienaam = p.naam ? p.naam.replace(p.voornaam, '').trim() : '';
+  set('ob-naam', familienaam);
+  set('ob-geb', p.geb);
+  if (p.geslacht) { var gs = document.getElementById('ob-geslacht'); if(gs) gs.value = p.geslacht; }
+  if (p.bloedgroep) { var bg = document.getElementById('ob-bloedgroep'); if(bg) bg.value = p.bloedgroep; }
+  set('ob-rijbewijs', p.rijbewijs);
+  set('ob-tel', p.tel);
+  set('ob-postcode', p.postcode);
+  set('ob-gemeente', p.gemeente);
+  set('ob-straat', p.straat);
+  set('ob-nood-naam', p.noodNaam);
+  set('ob-nood-tel', p.noodTel);
+  set('ob-allergieën', p.allergieën);
+  // Doelwaarden
+  set('ob-doel-nuchter', p.doelNuchter);
+  set('ob-doel-namaal', p.doelNaMaaltijd);
+  set('ob-doel-hba1c', p.doelHba1c);
+  set('ob-hba1c-laast', p.hba1cLaatst);
+  // BMI
+  if (p.lengte) set('ob-lengte', p.lengte);
+  if (p.gewicht) set('ob-gewicht', p.gewicht);
 }
 
 
