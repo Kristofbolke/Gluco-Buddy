@@ -1,8 +1,8 @@
 // Gluco Buddy - Service Worker
 // Versie: 30.0.0 — debug opslaan verificatie
 
-const CACHE_NAME = 'gluco-buddy-v30';
-const RUNTIME_CACHE = 'gluco-buddy-runtime-v21';
+const CACHE_NAME = 'gluco-buddy-v31';
+const RUNTIME_CACHE = 'gluco-buddy-runtime-v22';
 
 const PRECACHE_URLS = [
   '/',

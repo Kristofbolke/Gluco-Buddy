@@ -9772,25 +9772,29 @@ function saveData() {
     try { localStorage.setItem(AVATAR_KEY, obData.avatarPhotoSrc); } catch(e) {}
   }
 
+  var _saveStep = 'init';
   try {
     // obData/passport zonder de grote foto (wordt apart hersteld via AVATAR_KEY)
+    _saveStep = 'passportLite';
     var obDataLite = Object.assign({}, obData, { avatarPhotoSrc: obData.avatarIsPhoto ? '\u00a7photo' : '' });
     var passportLite = Object.assign({}, passport, { avatarPhotoSrc: passport.avatarIsPhoto ? '\u00a7photo' : '' });
+    _saveStep = 'serialize-passport'; var _pp = JSON.parse(JSON.stringify(passportLite));
+    _saveStep = 'serialize-obData';   var _ob = JSON.parse(JSON.stringify(obDataLite));
+    _saveStep = 'serialize-beno';     var _bn = JSON.parse(JSON.stringify(benodigdheden));
+    _saveStep = 'serialize-notifs';   var _cn = JSON.parse(JSON.stringify(customNotifs));
+    _saveStep = 'serialize-reminders';var _rm = JSON.parse(JSON.stringify(reminders));
+    _saveStep = 'serialize-lastGlu';  var _lg = JSON.parse(JSON.stringify(lastGlucose));
+    _saveStep = 'build-data';
     const data = {
       meds, appts, sensorData, sensorHistory,
       qaNotes, walletDocs, gameData, customEduCards,
       doses, doseDates, docDates, calY, calM, bmiHistory,
-      passport: JSON.parse(JSON.stringify(passportLite)),
-      obData: JSON.parse(JSON.stringify(obDataLite)),
-      benodigdheden: JSON.parse(JSON.stringify(benodigdheden)),
+      passport: _pp, obData: _ob, benodigdheden: _bn,
       medCheckSelected: medCheckSelected.slice(),
       medCheckLog: medCheckLog.slice(),
-      customNotifs: JSON.parse(JSON.stringify(customNotifs)),
-      reminders: JSON.parse(JSON.stringify(reminders)),
-      lastGlucose: JSON.parse(JSON.stringify(lastGlucose)),
+      customNotifs: _cn, reminders: _rm, lastGlucose: _lg,
       glucoseHistory: glucoseHistory.slice(),
-      longBaseDose: longBaseDose,
-      longBaseDoseDate: longBaseDoseDate,
+      longBaseDose: longBaseDose, longBaseDoseDate: longBaseDoseDate,
       longGlucoseHistory: longGlucoseHistory.slice(),
       doseHistory: doseHistory.slice(),
       hba1cHistory: hba1cHistory.slice(),
@@ -9798,10 +9802,11 @@ function saveData() {
       onboardingDone: true,
       savedAt: new Date().toISOString()
     };
+    _saveStep = 'localStorage.setItem';
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch(e) {
-    console.warn('saveData fout (STORAGE_KEY):', e);
-    // Zelfs als het grote object niet past, is de DONE_KEY al opgeslagen hierboven
+    console.warn('saveData fout bij stap [' + _saveStep + ']:', e);
+    try { showMedToast('⚠️ Opslaan mislukt bij "' + _saveStep + '": ' + (e && e.message ? e.message : String(e)), '#c00', 15000); } catch(e2) {}
   }
 }
 
