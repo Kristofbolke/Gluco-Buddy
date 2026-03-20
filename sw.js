@@ -1,8 +1,8 @@
 // Gluco Buddy - Service Worker
-// Versie: 26.0.0 — bugfixes data persistentie + meetscherm begroeting
+// Versie: 27.0.0 — debug naam diagnose
 
-const CACHE_NAME = 'gluco-buddy-v26';
-const RUNTIME_CACHE = 'gluco-buddy-runtime-v17';
+const CACHE_NAME = 'gluco-buddy-v27';
+const RUNTIME_CACHE = 'gluco-buddy-runtime-v18';
 
 const PRECACHE_URLS = [
   '/',
@@ -173,4 +173,4 @@ self.addEventListener('pushsubscriptionchange', event => {
   );
 });
 
-console.log('[SW] Gluco Buddy Service Worker v25.0 geladen ✓');
+console.log('[SW] Gluco Buddy Service Worker v27.0 geladen ✓');

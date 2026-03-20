@@ -14512,6 +14512,18 @@ function initAppUI() {
     updateDoseDisplay();
     updateAppPinStatus();
   }, 900);
+
+  // ── DEBUG: toon passport.voornaam na laden ──
+  setTimeout(function() {
+    var _dbgNaam = (passport && passport.voornaam) ? passport.voornaam : '(leeg)';
+    var _dbgLS   = '';
+    try {
+      var _dbgRaw = localStorage.getItem('glucoBuddyData_v2');
+      var _dbgObj = _dbgRaw ? JSON.parse(_dbgRaw) : null;
+      _dbgLS = (_dbgObj && _dbgObj.passport && _dbgObj.passport.voornaam) ? _dbgObj.passport.voornaam : '(leeg in LS)';
+    } catch(e) { _dbgLS = '(fout)'; }
+    showMedToast('🔍 Naam nu: "' + _dbgNaam + '" | LS: "' + _dbgLS + '"', '#333', 8000);
+  }, 2000);
 }
 
 // APP STARTUP
