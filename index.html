@@ -4309,6 +4309,7 @@ const doses={breakfast:8,lunch:10,dinner:10,bedtime:18};
 let doseDates={breakfast:'',lunch:'',dinner:'',bedtime:''};
 let longBaseDose = 18;
 let longBaseDoseDate = '';
+let longGlucoseHistory = [];
 let doseHistory=[];
 let docDates={breakfast:'',lunch:'',dinner:'',bedtime:''};
 
@@ -5515,15 +5516,7 @@ function ppSaveSection(sec) {
   try { ppCheckRijbewijsAlert(); } catch(e) {}
   autosave();  // saveData() + savePassport() (DOM nu correct) + Supabase sync
   ppCancelSection(sec);
-  // Verifieer opslaan: lees onmiddellijk terug uit localStorage
-  var _dbgMsg = '✅ Opgeslagen!';
-  try {
-    var _dbgRaw = localStorage.getItem('glucoBuddyData_v2');
-    var _dbgObj = _dbgRaw ? JSON.parse(_dbgRaw) : null;
-    var _dbgNm = (_dbgObj && _dbgObj.passport) ? (_dbgObj.passport.voornaam||'(leeg)') : '(geen passport)';
-    _dbgMsg = '✅ Opgeslagen · naam in geheugen: "' + _dbgNm + '"';
-  } catch(e) { _dbgMsg = '✅ Opgeslagen · verificatie fout: ' + e.message; }
-  showMedToast(_dbgMsg, 'var(--ok)', 6000);
+  showMedToast('✅ Opgeslagen!', 'var(--ok)');
 }
 
 function ppAgePreview() {
@@ -9756,45 +9749,47 @@ function initSupabase() {
 // =============================================
 // GLUCO BUDDY — DATA PERSISTENCE (localStorage)
 // =============================================
-const STORAGE_KEY    = 'glucoBuddyData_v2';
-const PASSPORT_KEY   = 'glucoBuddyPassport_v2';
-const DISCLAIMER_KEY = 'glucoBuddyDisclaimerAccepted';
-const DONE_KEY       = 'glucoBuddy_done';      // Tiny flag — apart opgeslagen zodat quota-problemen STORAGE_KEY niet blokkeren
-const AVATAR_KEY     = 'glucoBuddy_avatarPhoto'; // Base64 foto apart — kan meerdere MB zijn
+const STORAGE_KEY        = 'glucoBuddyData_v2';
+const PASSPORT_KEY       = 'glucoBuddyPassport_v2';
+const PASSPORT_MODEL_KEY = 'glucoBuddyPassportModel_v1'; // Passport-object apart opgeslagen
+const DISCLAIMER_KEY     = 'glucoBuddyDisclaimerAccepted';
+const DONE_KEY           = 'glucoBuddy_done';
+const AVATAR_KEY         = 'glucoBuddy_avatarPhoto';
 
 function saveData() {
   // Sla de vlag ALTIJD op als allereerste — dit is de kleinste schrijfoperatie
   try { localStorage.setItem(DONE_KEY, '1'); } catch(e) {}
   try { localStorage.setItem(DISCLAIMER_KEY, 'true'); } catch(e) {}
 
+  // Sla passport-object ALTIJD apart op — volledig onafhankelijk van het grote data-object
+  try {
+    var _pm = Object.assign({}, passport, { avatarPhotoSrc: passport.avatarIsPhoto ? '\u00a7photo' : '' });
+    localStorage.setItem(PASSPORT_MODEL_KEY, JSON.stringify(_pm));
+  } catch(e) { console.warn('saveData: passport apart opslaan mislukt:', e); }
+
   // Sla de avatarfoto APART op (kan meerdere MB zijn als base64 en veroorzaakt QuotaExceededError)
   if (obData.avatarIsPhoto && obData.avatarPhotoSrc) {
     try { localStorage.setItem(AVATAR_KEY, obData.avatarPhotoSrc); } catch(e) {}
   }
 
-  var _saveStep = 'init';
   try {
-    // obData/passport zonder de grote foto (wordt apart hersteld via AVATAR_KEY)
-    _saveStep = 'passportLite';
     var obDataLite = Object.assign({}, obData, { avatarPhotoSrc: obData.avatarIsPhoto ? '\u00a7photo' : '' });
     var passportLite = Object.assign({}, passport, { avatarPhotoSrc: passport.avatarIsPhoto ? '\u00a7photo' : '' });
-    _saveStep = 'serialize-passport'; var _pp = JSON.parse(JSON.stringify(passportLite));
-    _saveStep = 'serialize-obData';   var _ob = JSON.parse(JSON.stringify(obDataLite));
-    _saveStep = 'serialize-beno';     var _bn = JSON.parse(JSON.stringify(benodigdheden));
-    _saveStep = 'serialize-notifs';   var _cn = JSON.parse(JSON.stringify(customNotifs));
-    _saveStep = 'serialize-reminders';var _rm = JSON.parse(JSON.stringify(reminders));
-    _saveStep = 'serialize-lastGlu';  var _lg = JSON.parse(JSON.stringify(lastGlucose));
-    _saveStep = 'build-data';
     const data = {
       meds, appts, sensorData, sensorHistory,
       qaNotes, walletDocs, gameData, customEduCards,
       doses, doseDates, docDates, calY, calM, bmiHistory,
-      passport: _pp, obData: _ob, benodigdheden: _bn,
+      passport: JSON.parse(JSON.stringify(passportLite)),
+      obData: JSON.parse(JSON.stringify(obDataLite)),
+      benodigdheden: JSON.parse(JSON.stringify(benodigdheden)),
       medCheckSelected: medCheckSelected.slice(),
       medCheckLog: medCheckLog.slice(),
-      customNotifs: _cn, reminders: _rm, lastGlucose: _lg,
+      customNotifs: JSON.parse(JSON.stringify(customNotifs)),
+      reminders: JSON.parse(JSON.stringify(reminders)),
+      lastGlucose: JSON.parse(JSON.stringify(lastGlucose)),
       glucoseHistory: glucoseHistory.slice(),
-      longBaseDose: longBaseDose, longBaseDoseDate: longBaseDoseDate,
+      longBaseDose: longBaseDose,
+      longBaseDoseDate: longBaseDoseDate,
       longGlucoseHistory: longGlucoseHistory.slice(),
       doseHistory: doseHistory.slice(),
       hba1cHistory: hba1cHistory.slice(),
@@ -9802,11 +9797,9 @@ function saveData() {
       onboardingDone: true,
       savedAt: new Date().toISOString()
     };
-    _saveStep = 'localStorage.setItem';
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch(e) {
-    console.warn('saveData fout bij stap [' + _saveStep + ']:', e);
-    try { showMedToast('⚠️ Opslaan mislukt bij "' + _saveStep + '": ' + (e && e.message ? e.message : String(e)), '#c00', 15000); } catch(e2) {}
+    console.warn('saveData fout (STORAGE_KEY):', e);
   }
 }
 
@@ -9859,13 +9852,27 @@ function loadData() {
     if (data.passport) {
       // Nieuw paspoort-object laden
       Object.assign(passport, data.passport);
-      if (passport.avatarPhotoSrc === '\u00a7photo' || (passport.avatarIsPhoto && !passport.avatarPhotoSrc)) {
-        var savedPhoto = localStorage.getItem(AVATAR_KEY);
-        if (savedPhoto) passport.avatarPhotoSrc = savedPhoto;
+    } else {
+      // Fallback: apart opgeslagen passport-model proberen
+      try {
+        var _pmRaw = localStorage.getItem(PASSPORT_MODEL_KEY);
+        if (_pmRaw) Object.assign(passport, JSON.parse(_pmRaw));
+      } catch(e) {}
+      // Legacy migratie
+      if (data.obData) migreerNaarPassport(data);
+    }
+    // Altijd ook apart opgeslagen passport samenvoegen (kan nieuwer zijn)
+    try {
+      var _pmRaw2 = localStorage.getItem(PASSPORT_MODEL_KEY);
+      if (_pmRaw2) {
+        var _pmObj = JSON.parse(_pmRaw2);
+        // Alleen samenvoegen als er echte data in zit
+        if (_pmObj && _pmObj.voornaam) Object.assign(passport, _pmObj);
       }
-    } else if (data.obData) {
-      // Eerste keer na update: migreer legacy obData → passport
-      migreerNaarPassport(data);
+    } catch(e) {}
+    if (passport.avatarPhotoSrc === '\u00a7photo' || (passport.avatarIsPhoto && !passport.avatarPhotoSrc)) {
+      var savedPhoto = localStorage.getItem(AVATAR_KEY);
+      if (savedPhoto) passport.avatarPhotoSrc = savedPhoto;
     }
     if (data.obData) {
       Object.assign(obData, data.obData);
@@ -14493,18 +14500,11 @@ function initAppUI() {
   // ── FASE 2: home-widgets (30ms) ──
   setTimeout(function() {
     loadPassport();
-    ppRefreshAllViews();  // Herlaad paspoort-weergave vanuit passport-object
+    ppRefreshAllViews();
     refreshHomeGlucose();
     updateSensorCard();
     updateAgeDisplay();
     renderHomeAppts();
-    // DEBUG startup: toon naam in localStorage
-    try {
-      var _r = localStorage.getItem('glucoBuddyData_v2');
-      var _o = _r ? JSON.parse(_r) : null;
-      var _n = (_o && _o.passport) ? (_o.passport.voornaam||'(leeg)') : '(geen data)';
-      showMedToast('🔑 Bij start: naam in geheugen = "' + _n + '"', '#1a6', 7000);
-    } catch(e) {}
   }, 30);
 
   // ── FASE 3: grafieken + trends (150ms) ──
