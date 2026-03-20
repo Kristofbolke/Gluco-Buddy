@@ -11211,7 +11211,13 @@ function _nameToColor(str) {
 function _getInitials(voornaam, naam) {
   var v = (voornaam || '').trim();
   var n = (naam || '').trim();
-  if (v && n) return (v[0] + n[0]).toUpperCase();
+  if (v && n) {
+    // naam kan de volledige naam bevatten ("Kristof D'haene") — strip voornaam eraf
+    var familienaam = n.replace(v, '').trim();
+    var initial = familienaam ? familienaam[0] : (n !== v ? n[n.length-1] : '');
+    if (initial) return (v[0] + initial).toUpperCase();
+    return v.slice(0,2).toUpperCase();
+  }
   if (v) return v.slice(0,2).toUpperCase();
   if (n) return n.slice(0,2).toUpperCase();
   return '?';
@@ -12568,7 +12574,7 @@ function obGeneratePDF() {
   var p = passport;
   var age = p.geb ? Math.floor((Date.now()-new Date(p.geb))/(365.25*24*3600*1000)) : '';
   var avatarSrc = (p.avatarIsPhoto && p.avatarPhotoSrc && p.avatarPhotoSrc !== '\u00a7photo') ? p.avatarPhotoSrc : '';
-  var initials = (p.voornaam||'?').charAt(0).toUpperCase() + ((p.naam||'').replace(p.voornaam||'','').trim().charAt(0)||'').toUpperCase();
+  var initials = _getInitials(p.voornaam, p.naam);
   var gebStr = p.geb ? new Date(p.geb).toLocaleDateString('nl-BE',{day:'2-digit',month:'long',year:'numeric'}) : '—';
   var adres = [p.straat,p.postcode,p.gemeente].filter(Boolean).join(', ');
   var familienaam = p.naam ? p.naam.replace(p.voornaam||'','').trim() : '';
