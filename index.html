@@ -5515,7 +5515,15 @@ function ppSaveSection(sec) {
   try { ppCheckRijbewijsAlert(); } catch(e) {}
   autosave();  // saveData() + savePassport() (DOM nu correct) + Supabase sync
   ppCancelSection(sec);
-  showMedToast('✅ Opgeslagen!', 'var(--ok)');
+  // Verifieer opslaan: lees onmiddellijk terug uit localStorage
+  var _dbgMsg = '✅ Opgeslagen!';
+  try {
+    var _dbgRaw = localStorage.getItem('glucoBuddyData_v2');
+    var _dbgObj = _dbgRaw ? JSON.parse(_dbgRaw) : null;
+    var _dbgNm = (_dbgObj && _dbgObj.passport) ? (_dbgObj.passport.voornaam||'(leeg)') : '(geen passport)';
+    _dbgMsg = '✅ Opgeslagen · naam in geheugen: "' + _dbgNm + '"';
+  } catch(e) { _dbgMsg = '✅ Opgeslagen · verificatie fout: ' + e.message; }
+  showMedToast(_dbgMsg, 'var(--ok)', 6000);
 }
 
 function ppAgePreview() {
@@ -14485,6 +14493,13 @@ function initAppUI() {
     updateSensorCard();
     updateAgeDisplay();
     renderHomeAppts();
+    // DEBUG startup: toon naam in localStorage
+    try {
+      var _r = localStorage.getItem('glucoBuddyData_v2');
+      var _o = _r ? JSON.parse(_r) : null;
+      var _n = (_o && _o.passport) ? (_o.passport.voornaam||'(leeg)') : '(geen data)';
+      showMedToast('🔑 Bij start: naam in geheugen = "' + _n + '"', '#1a6', 7000);
+    } catch(e) {}
   }, 30);
 
   // ── FASE 3: grafieken + trends (150ms) ──
