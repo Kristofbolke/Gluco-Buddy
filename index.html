@@ -5504,15 +5504,16 @@ function ppSaveSection(sec) {
     });
     ppRenderOnderzoekenView();
   }
-  // Sync naar legacy + UI updaten
+  // Eerst opslaan — vóór render zodat een crash de data niet verliest
   paspoortSyncNaarLegacy();
-  ppRefreshAllViews();
-  updateDoseDisplay();
-  renderPPDosesView();
-  renderPPMedsView();
-  refreshPassportHeader();
-  ppCheckRijbewijsAlert();
   autosave();
+  // Dan UI updaten
+  try { ppRefreshAllViews(); } catch(e) {}
+  try { updateDoseDisplay(); } catch(e) {}
+  try { renderPPDosesView(); } catch(e) {}
+  try { renderPPMedsView(); } catch(e) {}
+  try { refreshPassportHeader(); } catch(e) {}
+  try { ppCheckRijbewijsAlert(); } catch(e) {}
   ppCancelSection(sec);
   showMedToast('✅ Opgeslagen!', 'var(--ok)');
 }
