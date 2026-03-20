@@ -4400,7 +4400,17 @@ function showSc(name){
   if(name==='passport') { setTimeout(refreshPassportHeader,50); setTimeout(renderPPMedsView,50); setTimeout(ppCheckRijbewijsAlert,50); setTimeout(ppRenderTeamView,80); }
   if(name==='qa') setTimeout(ppFillTeamDatalist,50);
   if(name==='cal') setTimeout(ppFillApptChips,50);
-  if(name==='input') { paspoortSyncNaarLegacy(); setTimeout(updateDoseDisplay,50); }
+  if(name==='input') {
+    paspoortSyncNaarLegacy();
+    setTimeout(updateDoseDisplay, 50);
+    // Begroeting bijwerken met huidige naam
+    var _grVn = (passport && passport.voornaam) || (obData && obData.voornaam) || '';
+    if (_grVn) {
+      _metingMsgs[0] = 'Zullen we even meten, ' + _grVn + '?';
+      var _grEl2 = document.getElementById('inp-s1-greeting');
+      if (_grEl2) _grEl2.textContent = _metingMsgs[0];
+    }
+  }
   if(name==='notifs') setTimeout(renderNotifs,50);
   if(name==='apotheek') setTimeout(renderApotheek,50);
   if(name==='voorschrift') setTimeout(renderVoorschrift,50);
