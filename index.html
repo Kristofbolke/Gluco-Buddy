@@ -15444,7 +15444,7 @@ function kiesGevoel(btn, label, key) {
 
 // Reset activiteit + gevoel bij inpReset
 var _origInpReset = inpReset;
-function inpReset() {
+inpReset = function() {
   _origInpReset();
   inpState.activiteit = null;
   inpState.activiteitIco = null;
