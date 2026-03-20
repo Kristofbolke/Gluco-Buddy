@@ -10583,6 +10583,8 @@ async function loadUserData(userId) {
     if (d.docDates) Object.assign(docDates, d.docDates);
     // Sla cloud-data direct op in localStorage zodat volgende opens instant zijn
     saveData();
+    try { ppRefreshAllViews(); } catch(e) {}  // Update DOM zodat savePassport correcte waarden opslaat
+    try { savePassport(); } catch(e) {}       // Sync PASSPORT_KEY met actuele passport-object
     refreshPassportFromObData();
     console.log('Data geladen uit Supabase en opgeslagen in localStorage');
   } catch(e) {
@@ -10785,6 +10787,7 @@ function _doBackgroundAuthSync() {
         // Na sync: stuur eventueel wachtende lokale wijzigingen naar cloud
         _flushPendingSync();
         loadPassport();
+        ppRefreshAllViews();  // Herstel paspoort-weergave vanuit passport-object (niet stale PASSPORT_KEY)
         refreshHomeGlucose();
         renderHomeTrends();
         renderHomeDoseHistory();

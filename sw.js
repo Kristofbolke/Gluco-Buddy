@@ -1,8 +1,8 @@
 // Gluco Buddy - Service Worker
-// Versie: 28.0.0 — fix naam verdwijnt na reload
+// Versie: 29.0.0 — fix naam verdwijnt na reload (Supabase sync pad)
 
-const CACHE_NAME = 'gluco-buddy-v28';
-const RUNTIME_CACHE = 'gluco-buddy-runtime-v19';
+const CACHE_NAME = 'gluco-buddy-v29';
+const RUNTIME_CACHE = 'gluco-buddy-runtime-v20';
 
 const PRECACHE_URLS = [
   '/',
@@ -173,4 +173,4 @@ self.addEventListener('pushsubscriptionchange', event => {
   );
 });
 
-console.log('[SW] Gluco Buddy Service Worker v28.0 geladen ✓');
+console.log('[SW] Gluco Buddy Service Worker v29.0 geladen ✓');
