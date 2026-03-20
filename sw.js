@@ -1,8 +1,8 @@
 // Gluco Buddy - Service Worker
-// Versie: 27.0.0 — debug naam diagnose
+// Versie: 28.0.0 — fix naam verdwijnt na reload
 
-const CACHE_NAME = 'gluco-buddy-v27';
-const RUNTIME_CACHE = 'gluco-buddy-runtime-v18';
+const CACHE_NAME = 'gluco-buddy-v28';
+const RUNTIME_CACHE = 'gluco-buddy-runtime-v19';
 
 const PRECACHE_URLS = [
   '/',
@@ -173,4 +173,4 @@ self.addEventListener('pushsubscriptionchange', event => {
   );
 });
 
-console.log('[SW] Gluco Buddy Service Worker v27.0 geladen ✓');
+console.log('[SW] Gluco Buddy Service Worker v28.0 geladen ✓');

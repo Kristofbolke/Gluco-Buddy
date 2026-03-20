@@ -5504,16 +5504,16 @@ function ppSaveSection(sec) {
     });
     ppRenderOnderzoekenView();
   }
-  // Eerst opslaan — vóór render zodat een crash de data niet verliest
   paspoortSyncNaarLegacy();
-  autosave();
-  // Dan UI updaten
+  saveData();  // Sla passport-object EERST op (geen DOM-afhankelijkheid)
+  // Update DOM vanuit passport-object (vóór savePassport, zodat PASSPORT_KEY correct is)
   try { ppRefreshAllViews(); } catch(e) {}
   try { updateDoseDisplay(); } catch(e) {}
   try { renderPPDosesView(); } catch(e) {}
   try { renderPPMedsView(); } catch(e) {}
   try { refreshPassportHeader(); } catch(e) {}
   try { ppCheckRijbewijsAlert(); } catch(e) {}
+  autosave();  // saveData() + savePassport() (DOM nu correct) + Supabase sync
   ppCancelSection(sec);
   showMedToast('✅ Opgeslagen!', 'var(--ok)');
 }
@@ -14477,6 +14477,7 @@ function initAppUI() {
   // ── FASE 2: home-widgets (30ms) ──
   setTimeout(function() {
     loadPassport();
+    ppRefreshAllViews();  // Herlaad paspoort-weergave vanuit passport-object
     refreshHomeGlucose();
     updateSensorCard();
     updateAgeDisplay();
@@ -14513,17 +14514,6 @@ function initAppUI() {
     updateAppPinStatus();
   }, 900);
 
-  // ── DEBUG: toon passport.voornaam na laden ──
-  setTimeout(function() {
-    var _dbgNaam = (passport && passport.voornaam) ? passport.voornaam : '(leeg)';
-    var _dbgLS   = '';
-    try {
-      var _dbgRaw = localStorage.getItem('glucoBuddyData_v2');
-      var _dbgObj = _dbgRaw ? JSON.parse(_dbgRaw) : null;
-      _dbgLS = (_dbgObj && _dbgObj.passport && _dbgObj.passport.voornaam) ? _dbgObj.passport.voornaam : '(leeg in LS)';
-    } catch(e) { _dbgLS = '(fout)'; }
-    showMedToast('🔍 Naam nu: "' + _dbgNaam + '" | LS: "' + _dbgLS + '"', '#333', 8000);
-  }, 2000);
 }
 
 // APP STARTUP
