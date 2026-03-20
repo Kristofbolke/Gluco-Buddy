@@ -3265,15 +3265,18 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
     <div class="sl" onclick="showSc('more')">← Terug</div>
   </div>
 
-  <!-- ONBOARDING INVITE BUTTON -->
-  <div style="padding:0 14px 14px;">
-    <button onclick="obRestart()" style="width:100%;padding:14px 16px;border:2px dashed var(--primary);border-radius:16px;background:linear-gradient(135deg,#FFF5EF,#FFF0E8);font-family:Nunito,sans-serif;font-weight:800;font-size:14px;color:var(--primary);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.2s;">
+  <!-- ONBOARDING INVITE BUTTON + PDF -->
+  <div style="padding:0 14px 14px;display:flex;gap:10px;">
+    <button onclick="obRestart()" style="flex:1;padding:14px 16px;border:2px dashed var(--primary);border-radius:16px;background:linear-gradient(135deg,#FFF5EF,#FFF0E8);font-family:Nunito,sans-serif;font-weight:800;font-size:14px;color:var(--primary);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.2s;">
       <span style="font-size:22px;">🤝</span>
       <div style="text-align:left;">
         <div>Laten we elkaar beter leren kennen</div>
-        <div style="font-size:11px;font-weight:600;color:var(--muted);margin-top:1px;">Doorloop de onboarding opnieuw · Profiel aanvullen of bijwerken</div>
+        <div style="font-size:11px;font-weight:600;color:var(--muted);margin-top:1px;">Profiel aanvullen of bijwerken</div>
       </div>
-      <span style="font-size:16px;margin-left:auto;">→</span>
+    </button>
+    <button onclick="obGeneratePDF()" style="flex-shrink:0;padding:14px 16px;border:none;border-radius:16px;background:linear-gradient(135deg,#E74C3C,#C0392B);color:white;font-family:Nunito,sans-serif;font-weight:800;font-size:13px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;">
+      <span style="font-size:22px;">📄</span>
+      <span>PDF</span>
     </button>
   </div>
 
