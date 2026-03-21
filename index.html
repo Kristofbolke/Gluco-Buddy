@@ -1515,7 +1515,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 <!-- VOORGESCHREVEN DOSES -->
 <div id="sc-doses" class="sc">
   <div class="sh">
-    <button class="bk" onclick="showSc('more')">←</button>
+    <button class="bk" onclick="showSc('meds')">←</button>
     <div class="st">💉 Voorgeschreven doses</div>
     <button onclick="openDoseEdit()" style="background:var(--primary);color:white;border:none;border-radius:10px;padding:6px 14px;font-family:Nunito,sans-serif;font-weight:800;font-size:13px;cursor:pointer;">✏️ Wijzigen</button>
   </div>
@@ -2521,10 +2521,10 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
   <div class="qg" style="margin-bottom:6px;">
     <button class="qb" onclick="showSc('passport')"><div class="qbi">🏥</div><div class="qbt">Medisch paspoort</div><div class="qbs">Jouw gegevens</div></button>
     <button class="qb" onclick="showSc('meds')"><div class="qbi">💊</div><div class="qbt">Medicatie</div><div class="qbs">Voorraadbeheer</div></button>
-    <button class="qb" onclick="showSc('doses')" style="border:2px solid #FFD0B0;"><div class="qbi">💉</div><div class="qbt">Doses insuline</div><div class="qbs">Voorgeschreven doses</div></button>
     <button class="qb" onclick="showSc('hba1c')" style="border:2px solid #BDD0FF;"><div class="qbi">🩸</div><div class="qbt">HbA1c</div><div class="qbs">Historiek &amp; schatting</div></button>
     <button class="qb" onclick="showSc('input');inpReset()" style="border:2px solid #FFD0B0;"><div class="qbi">💉</div><div class="qbt">Insuline calculator</div><div class="qbs">Bereken je dosis</div></button>
     <button class="qb" onclick="showSc('bp')" style="border:2px solid #FCDCE0;"><div class="qbi">❤️</div><div class="qbt">Bloeddruk</div><div class="qbs">Meting &amp; historiek</div></button>
+    <button class="qb" onclick="showSc('heatmap')" style="border:2px solid #D5F5E3;"><div class="qbi">🌡️</div><div class="qbt">Weekpatroon</div><div class="qbs">Glucose heatmap</div></button>
   </div>
 
   <!-- PLANNING & COMMUNICATIE -->
@@ -2550,7 +2550,6 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
   <div class="qg" style="margin-bottom:13px;">
     <button class="qb" onclick="showSc('hypo')" style="border:2px solid #FDEDEC;"><div class="qbi">🚨</div><div class="qbt">Hypo actieplan</div><div class="qbs">Stap-voor-stap gids</div></button>
     <button class="qb" onclick="showSc('edu')"><div class="qbi">🎓</div><div class="qbt">Educatie</div><div class="qbs">Infographics &amp; tips</div></button>
-    <button class="qb" onclick="showSc('heatmap')"><div class="qbi">🌡️</div><div class="qbt">Weekpatroon</div><div class="qbs">Glucose heatmap</div></button>
     <button class="qb" onclick="showSc('tools')"><div class="qbi">🧰</div><div class="qbt">Handige tools</div><div class="qbs">Omzetter &amp; calculators</div></button>
     <button class="qb" onclick="showSc('libre')" style="border:2px solid #BDD0FF;"><div class="qbi">📡</div><div class="qbt">LibreView Import</div><div class="qbs">CSV + AI analyse</div></button>
     <button class="qb" onclick="showSc('about')"><div class="qbi">ℹ️</div><div class="qbt">Over Gluco</div><div class="qbs">Welkomstvideo &amp; info</div></button>
@@ -2978,6 +2977,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
     <div class="st">💊 Medicatie &amp; Voorraad</div>
     <div style="display:flex;gap:8px;align-items:center;">
       <button onclick="showSc('voorschrift')" style="background:#7B2FBE;color:white;border:none;border-radius:20px;padding:6px 12px;font-family:Nunito,sans-serif;font-weight:800;font-size:12px;cursor:pointer;">📋 Voorschriften</button>
+      <button onclick="showSc('doses')" style="background:#ED5A07;color:white;border:none;border-radius:20px;padding:6px 12px;font-family:Nunito,sans-serif;font-weight:800;font-size:12px;cursor:pointer;">💉 Doses</button>
       <button onclick="showSc('apotheek')" style="background:#27AE60;color:white;border:none;border-radius:20px;padding:6px 12px;font-family:Nunito,sans-serif;font-weight:800;font-size:12px;cursor:pointer;">🛒 Apotheek</button>
       <div class="sl" onclick="showSc('more')">&#x2190; Terug</div>
     </div>
