@@ -3003,11 +3003,23 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
       <div class="ig" style="margin-bottom:0;"><label class="il">Sterkte</label><input class="ifl" id="mf-sterkte" placeholder="bv. 500 mg, 100 IE/ml"></div>
       <div class="ig" style="margin-bottom:0;"><label class="il">Toedieningsvorm</label>
         <select class="ifl" id="mf-type" style="font-family:'Nunito',sans-serif;font-size:13px;">
-          <option>Tablet</option><option>Capsule</option><option>Snelwerkend insuline</option>
-          <option>Langwerkend insuline</option><option>Injectie</option><option>Druppels</option>
+          <option>Tablet</option><option>Capsule</option><option>Flexpen</option><option>Pen</option>
+          <option>Injectie</option><option>Druppels</option>
           <option>Inhalatie</option><option>Zalf / crème</option><option>Andere</option>
         </select>
       </div>
+    </div>
+    <div class="ig" style="margin-bottom:12px;"><label class="il">Indicatie</label>
+      <select class="ifl" id="mf-indicatie" style="font-family:'Nunito',sans-serif;font-size:13px;">
+        <option value="">— Kies indicatie —</option>
+        <option>Snelwerkende insuline</option>
+        <option>Traagwerkende insuline</option>
+        <option>Hart</option>
+        <option>Bloedverdunner</option>
+        <option>Hoge bloeddruk</option>
+        <option>Cardio</option>
+        <option>Andere</option>
+      </select>
     </div>
     <div style="margin-bottom:12px;">
       <div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:6px;">Categorie</div>
@@ -6399,7 +6411,10 @@ function openMedForm(idx){
     var _t=document.getElementById('mf-title'); if(_t) _t.textContent='✏️ '+m.name+' bewerken';
     _setV('mf-name',m.name);
     _setV('mf-sterkte',m.sterkte||'');
-    _setV('mf-type',m.type||'Tablet');
+    var _editToedVorm = m.toedieningsvorm || (m.type==='Snelwerkend insuline'||m.type==='Langwerkend insuline' ? 'Flexpen' : m.type||'Tablet');
+    _setV('mf-type', _editToedVorm);
+    var _editIndicatie = m.indicatie || (m.type==='Snelwerkend insuline' ? 'Snelwerkende insuline' : m.type==='Langwerkend insuline' ? 'Traagwerkende insuline' : '');
+    _setV('mf-indicatie', _editIndicatie);
     _setV('mf-dosering',m.dosering||m.detail||'');
     _setV('mf-frequentie',m.frequentie||'');
     _setV('mf-startdatum',m.startdatum||'');
@@ -6423,7 +6438,7 @@ function openMedForm(idx){
     var _t2=document.getElementById('mf-title'); if(_t2) _t2.textContent='+ Nieuwe medicatie';
     ['mf-name','mf-sterkte','mf-dosering','mf-frequentie','mf-startdatum','mf-behandelingsduur',
      'mf-voorschrijver','mf-opmerking','mf-eenheden-per-verpakking','mf-aantal-verpakkingen',
-     'mf-min-stock','mf-exp','mf-detail'].forEach(function(id){ _setV(id,''); });
+     'mf-min-stock','mf-exp','mf-detail','mf-indicatie'].forEach(function(id){ _setV(id,''); });
     _setV('mf-qty',0); _setV('mf-max',100); _setV('mf-dose-per',1); _setV('mf-units-per',0);
     var disp=document.getElementById('mf-totale-voorraad-display'); if(disp) disp.textContent='—';
     setTimeout(function(){ setMedCat('diabetes'); },50);
@@ -6446,10 +6461,17 @@ function saveMed(){
   var av  = parseFloat((document.getElementById('mf-aantal-verpakkingen')||{}).value)||0;
   var totaal = epv > 0 && av > 0 ? Math.round(epv * av * 10)/10 : parseFloat((document.getElementById('mf-qty')||{}).value)||0;
   var dosering = (document.getElementById('mf-dosering')||{}).value||'';
+  var _mfIndicatie = (document.getElementById('mf-indicatie')||{}).value||'';
+  var _mfToedVorm  = (document.getElementById('mf-type')||{}).value||'Tablet';
+  var _mfType = _mfIndicatie === 'Snelwerkende insuline' ? 'Snelwerkend insuline'
+              : _mfIndicatie === 'Traagwerkende insuline' ? 'Langwerkend insuline'
+              : _mfToedVorm;
   const med={
     name:nm,
     cat: catEl ? catEl.value : 'diabetes',
-    type:(document.getElementById('mf-type')||{}).value||'Tablet',
+    type: _mfType,
+    toedieningsvorm: _mfToedVorm,
+    indicatie: _mfIndicatie,
     unit:(document.getElementById('mf-unit')||{}).value||'tabletten',
     sterkte:(document.getElementById('mf-sterkte')||{}).value||'',
     dosering:dosering,
