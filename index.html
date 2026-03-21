@@ -1782,7 +1782,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
       ✅ Medisch paspoort<br>
       ✅ Vragen voor het team<br>
       ✅ Gamification (streaks & badges)<br>
-      ❌ Documenten wallet (om privacy)<br>
+      ✅ Documenten wallet<br>
       ❌ Pincode
     </div>
     <div style="background:#E8F5E9;border-radius:12px;padding:12px;margin-top:12px;">
@@ -9692,6 +9692,7 @@ async function _doKoppelImport(code, btnId, afterImport) {
     if(d.qaNotes) qaNotes = d.qaNotes;
     if(d.gameData) Object.assign(gameData, d.gameData);
     if(d.customEduCards) customEduCards = d.customEduCards;
+    if(d.walletDocs) walletDocs = d.walletDocs;
     if(d.passport) Object.assign(passport, d.passport);
     autosave();
     await _sb.from('koppelcodes').delete().eq('code', trimmed);
@@ -9717,6 +9718,7 @@ async function importKoppelCodeFromBackup() {
   await _doKoppelImport(code, 'backup-koppel-btn', function(){
     renderMeds(); renderAppts(); renderQA(); updateSensorCard();
     renderSensorHistory(); updateGameUI(); loadPassport();
+    try { renderWalletDocs(); } catch(e) {}
     showMedToast('🎉 Gegevens overgedragen!', 'var(--ok)', 4000);
   });
 }
@@ -9744,6 +9746,7 @@ function collectBackupData() {
       qaNotes: qaNotes,
       gameData: gameData,
       customEduCards: customEduCards,
+      walletDocs: walletDocs,
       passportData: (function(){
         const fields = ['pp-naam','pp-type','pp-bloed','pp-doc1','pp-doc2','pp-ziek','pp-nood','pp-snel','pp-lang','pp-sens','pp-aller','pp-nucht','pp-namaal','pp-hba1c','pp-hba1clast','pp-geb','pp-rijbewijs'];
         const obj = {};
