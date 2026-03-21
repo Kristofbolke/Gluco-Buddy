@@ -3009,8 +3009,8 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
         </select>
       </div>
     </div>
-    <div class="ig" style="margin-bottom:12px;"><label class="il">Indicatie</label>
-      <select class="ifl" id="mf-indicatie" style="font-family:'Nunito',sans-serif;font-size:13px;">
+    <div class="ig" style="margin-bottom:6px;"><label class="il">Indicatie</label>
+      <select class="ifl" id="mf-indicatie" style="font-family:'Nunito',sans-serif;font-size:13px;" onchange="mfIndicatieChange()">
         <option value="">— Kies indicatie —</option>
         <option>Snelwerkende insuline</option>
         <option>Traagwerkende insuline</option>
@@ -3018,8 +3018,12 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
         <option>Bloedverdunner</option>
         <option>Hoge bloeddruk</option>
         <option>Cardio</option>
-        <option>Andere</option>
+        <option>Cholesterol</option>
+        <option value="Andere">Andere</option>
       </select>
+    </div>
+    <div class="ig" id="mf-indicatie-andere-wrap" style="display:none;margin-bottom:12px;">
+      <input class="ifl" id="mf-indicatie-andere" placeholder="Vul indicatie in...">
     </div>
     <div style="margin-bottom:12px;">
       <div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:6px;">Categorie</div>
@@ -3062,7 +3066,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 
     <!-- Voorschrijver -->
     <div style="font-size:10px;font-weight:900;color:var(--primary);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #FFD0A8;">👨‍⚕️ Voorschrijver</div>
-    <div class="ig"><label class="il">Voorschrijver (arts)</label><input class="ifl" id="mf-voorschrijver" placeholder="bv. Dr. Janssen, Endocrinoloog"></div>
+    <div class="ig"><label class="il">Voorschrijver (arts)</label><input class="ifl" id="mf-voorschrijver" list="mf-voorschrijver-list" placeholder="bv. Dr. Janssen, Endocrinoloog" autocomplete="off"><datalist id="mf-voorschrijver-list"></datalist></div>
     <div class="ig"><label class="il">Opmerking</label><input class="ifl" id="mf-opmerking" placeholder="bv. nemen met maaltijd, bijwerking..."></div>
 
     <!-- Voorraad -->
@@ -6375,6 +6379,30 @@ var DEFAULT_IE_PER_PEN = {
   'Toujeo': 450, 'Tresiba': 300, 'Lantus': 300, 'Levemir': 300,
   'Degludec': 300, 'Toujeo SoloStar': 450
 };
+function mfIndicatieChange() {
+  var sel = document.getElementById('mf-indicatie');
+  var wrap = document.getElementById('mf-indicatie-andere-wrap');
+  if (wrap) wrap.style.display = (sel && sel.value === 'Andere') ? 'block' : 'none';
+}
+
+function mfVulVoorschrijverLijst() {
+  var dl = document.getElementById('mf-voorschrijver-list');
+  if (!dl) return;
+  dl.innerHTML = '';
+  var teamDefs = [
+    {key:'endo'}, {key:'huisarts'}, {key:'educator'}, {key:'verpleeg'},
+    {key:'dietist'}, {key:'podoloog'}, {key:'oogarts'}, {key:'ziekenhuis'}
+  ];
+  var namen = [];
+  teamDefs.forEach(function(t) { if (passport[t.key]) namen.push(passport[t.key]); });
+  (passport.extraTeam||[]).forEach(function(m) { if (m.naam) namen.push(m.naam); });
+  namen.forEach(function(naam) {
+    var opt = document.createElement('option');
+    opt.value = naam;
+    dl.appendChild(opt);
+  });
+}
+
 function setMedCat(cat) {
   const inp = document.getElementById('mf-cat');
   if(inp) inp.value = cat;
@@ -6434,12 +6462,16 @@ function openMedForm(idx){
     setTimeout(mfBerekenVoorraad,50);
     setTimeout(function(){ setMedCat(m.cat||'diabetes'); },50);
     setMfTijdstip(m.tijdstip||'');
+    mfIndicatieChange();
+    mfVulVoorschrijverLijst();
   } else {
     var _t2=document.getElementById('mf-title'); if(_t2) _t2.textContent='+ Nieuwe medicatie';
     ['mf-name','mf-sterkte','mf-dosering','mf-frequentie','mf-startdatum','mf-behandelingsduur',
      'mf-voorschrijver','mf-opmerking','mf-eenheden-per-verpakking','mf-aantal-verpakkingen',
      'mf-min-stock','mf-exp','mf-detail','mf-indicatie'].forEach(function(id){ _setV(id,''); });
     _setV('mf-qty',0); _setV('mf-max',100); _setV('mf-dose-per',1); _setV('mf-units-per',0);
+    mfIndicatieChange();
+    mfVulVoorschrijverLijst();
     var disp=document.getElementById('mf-totale-voorraad-display'); if(disp) disp.textContent='—';
     setTimeout(function(){ setMedCat('diabetes'); },50);
     setMfTijdstip('');
@@ -6461,7 +6493,10 @@ function saveMed(){
   var av  = parseFloat((document.getElementById('mf-aantal-verpakkingen')||{}).value)||0;
   var totaal = epv > 0 && av > 0 ? Math.round(epv * av * 10)/10 : parseFloat((document.getElementById('mf-qty')||{}).value)||0;
   var dosering = (document.getElementById('mf-dosering')||{}).value||'';
-  var _mfIndicatie = (document.getElementById('mf-indicatie')||{}).value||'';
+  var _mfIndicatieRaw = (document.getElementById('mf-indicatie')||{}).value||'';
+  var _mfIndicatie = _mfIndicatieRaw === 'Andere'
+    ? ((document.getElementById('mf-indicatie-andere')||{}).value||'Andere')
+    : _mfIndicatieRaw;
   var _mfToedVorm  = (document.getElementById('mf-type')||{}).value||'Tablet';
   var _mfType = _mfIndicatie === 'Snelwerkende insuline' ? 'Snelwerkend insuline'
               : _mfIndicatie === 'Traagwerkende insuline' ? 'Langwerkend insuline'
