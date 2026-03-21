@@ -2564,10 +2564,73 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
     <div class="sei"><div class="sel"><div class="seic">📅</div><div><div class="sela">Afspraken</div><div class="sels">1 dag van tevoren</div></div></div><div class="tog" onclick="this.classList.toggle('off')"></div></div>
   </div>
   <div class="card"><div class="ct">Profiel &amp; Instellingen</div>
-
-
+    <div class="sei" onclick="showSc('settings')" style="cursor:pointer;"><div class="sel"><div class="seic">⚙️</div><div><div class="sela">Instellingen</div><div class="sels">Stem, eenheden, omzetter</div></div></div><div style="font-size:18px;color:var(--primary);">›</div></div>
     <div class="sei" onclick="showAppPinSetup()" style="cursor:pointer;"><div class="sel"><div class="seic">🔒</div><div><div class="sela">App PIN instellen</div><div class="sels" id="app-pin-status">Niet ingesteld — tik om in te stellen</div></div></div><div style="font-size:18px;color:var(--primary);">›</div></div>
   </div>
+</div>
+<!-- INSTELLINGEN -->
+<div id="sc-settings" class="sc">
+  <div class="sh">
+    <div class="st">⚙️ Instellingen</div>
+    <div class="sl" onclick="showSc('more')">← Terug</div>
+  </div>
+
+  <!-- STEM & GELUID -->
+  <div class="card" style="margin-bottom:10px;">
+    <div class="ct">🔊 Stem &amp; Geluid</div>
+    <div class="sei">
+      <div class="sel"><div class="seic">🗣️</div><div><div class="sela">Stem van Gluco</div><div class="sels">Gluco spreekt berichten uit</div></div></div>
+      <div class="tog" id="setting-stem" onclick="toggleSetting('stemAan',this)"></div>
+    </div>
+  </div>
+
+  <!-- EENHEDEN -->
+  <div class="card" style="margin-bottom:10px;">
+    <div class="ct">📏 Eenheden</div>
+
+    <div style="margin-bottom:16px;">
+      <div style="font-size:11px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Bloedglucose</div>
+      <div style="display:flex;gap:8px;">
+        <button id="btn-unit-mgdl" onclick="setGlucoseUnit('mgdl')" style="flex:1;padding:11px;border-radius:12px;border:2px solid var(--bg2);background:var(--bg2);font-family:Nunito,sans-serif;font-weight:800;font-size:14px;cursor:pointer;transition:all 0.2s;color:var(--text);">mg/dL</button>
+        <button id="btn-unit-mmol" onclick="setGlucoseUnit('mmol')" style="flex:1;padding:11px;border-radius:12px;border:2px solid var(--bg2);background:var(--bg2);font-family:Nunito,sans-serif;font-weight:800;font-size:14px;cursor:pointer;transition:all 0.2s;color:var(--text);">mmol/L</button>
+      </div>
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <div style="font-size:11px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Gewicht</div>
+      <div style="display:flex;gap:8px;">
+        <button id="btn-unit-kg" onclick="setUnit('gewichtEenheid','kg')" style="flex:1;padding:11px;border-radius:12px;border:2px solid var(--bg2);background:var(--bg2);font-family:Nunito,sans-serif;font-weight:800;font-size:14px;cursor:pointer;transition:all 0.2s;color:var(--text);">kg</button>
+        <button id="btn-unit-lbs" onclick="setUnit('gewichtEenheid','lbs')" style="flex:1;padding:11px;border-radius:12px;border:2px solid var(--bg2);background:var(--bg2);font-family:Nunito,sans-serif;font-weight:800;font-size:14px;cursor:pointer;transition:all 0.2s;color:var(--text);">lbs</button>
+      </div>
+    </div>
+
+    <div>
+      <div style="font-size:11px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Lengte</div>
+      <div style="display:flex;gap:8px;">
+        <button id="btn-unit-cm" onclick="setUnit('lengteEenheid','cm')" style="flex:1;padding:11px;border-radius:12px;border:2px solid var(--bg2);background:var(--bg2);font-family:Nunito,sans-serif;font-weight:800;font-size:14px;cursor:pointer;transition:all 0.2s;color:var(--text);">cm</button>
+        <button id="btn-unit-ft" onclick="setUnit('lengteEenheid','ft')" style="flex:1;padding:11px;border-radius:12px;border:2px solid var(--bg2);background:var(--bg2);font-family:Nunito,sans-serif;font-weight:800;font-size:14px;cursor:pointer;transition:all 0.2s;color:var(--text);">ft / in</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GLUCOSE OMZETTER -->
+  <div class="card" style="margin-bottom:10px;">
+    <div class="ct">🔄 Glucose Omzetter</div>
+    <div style="font-size:12px;color:var(--muted);font-weight:600;margin-bottom:14px;">Reken snel om tussen mg/dL en mmol/L</div>
+    <div style="display:flex;align-items:flex-end;gap:10px;">
+      <div style="flex:1;">
+        <label style="font-size:11px;font-weight:900;color:var(--muted);display:block;margin-bottom:5px;">mg/dL</label>
+        <input type="number" id="conv-mgdl" placeholder="bv. 126" min="0" max="600" step="1" oninput="glucoseConvert('mgdl')" style="width:100%;padding:11px 12px;border:2px solid var(--bg2);border-radius:12px;font-family:Nunito,sans-serif;font-weight:700;font-size:16px;box-sizing:border-box;background:var(--bg2);color:var(--text);">
+      </div>
+      <div style="font-size:22px;color:var(--primary);padding-bottom:10px;">⇌</div>
+      <div style="flex:1;">
+        <label style="font-size:11px;font-weight:900;color:var(--muted);display:block;margin-bottom:5px;">mmol/L</label>
+        <input type="number" id="conv-mmol" placeholder="bv. 7.0" min="0" max="33" step="0.1" oninput="glucoseConvert('mmol')" style="width:100%;padding:11px 12px;border:2px solid var(--bg2);border-radius:12px;font-family:Nunito,sans-serif;font-weight:700;font-size:16px;box-sizing:border-box;background:var(--bg2);color:var(--text);">
+      </div>
+    </div>
+    <div id="conv-result" style="text-align:center;font-size:12px;font-weight:700;color:var(--muted);margin-top:10px;min-height:18px;"></div>
+  </div>
+
 </div>
 <!-- RAPPORTEN -->
 <div id="sc-reports" class="sc">
@@ -9760,6 +9823,93 @@ function initSupabase() {
 // =============================================
 
 // =============================================
+// =============================================
+// APP INSTELLINGEN
+// =============================================
+const SETTINGS_KEY = 'glucoBuddySettings_v1';
+var appSettings = {
+  stemAan: true,
+  glucoseEenheid: 'mgdl',
+  gewichtEenheid: 'kg',
+  lengteEenheid: 'cm'
+};
+
+function loadSettings() {
+  try {
+    var raw = localStorage.getItem(SETTINGS_KEY);
+    if (raw) Object.assign(appSettings, JSON.parse(raw));
+  } catch(e) {}
+  refreshSettingsUI();
+}
+
+function saveSettings() {
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(appSettings)); } catch(e) {}
+}
+
+function toggleSetting(key, el) {
+  appSettings[key] = !appSettings[key];
+  if (el) el.classList.toggle('off', !appSettings[key]);
+  saveSettings();
+}
+
+function setGlucoseUnit(unit) {
+  appSettings.glucoseEenheid = unit;
+  saveSettings();
+  refreshSettingsUI();
+}
+
+function setUnit(key, val) {
+  appSettings[key] = val;
+  saveSettings();
+  refreshSettingsUI();
+}
+
+function refreshSettingsUI() {
+  // Stem toggle
+  var stemEl = document.getElementById('setting-stem');
+  if (stemEl) stemEl.classList.toggle('off', !appSettings.stemAan);
+
+  // Glucose unit buttons
+  var active = 'background:var(--primary);color:white;border-color:var(--primary);';
+  var inactive = 'background:var(--bg2);color:var(--text);border-color:var(--bg2);';
+  var mgdl = document.getElementById('btn-unit-mgdl');
+  var mmol = document.getElementById('btn-unit-mmol');
+  if (mgdl) mgdl.setAttribute('style', mgdl.getAttribute('style').replace(/background:[^;]+;color:[^;]+;border-color:[^;]+;/, '') + (appSettings.glucoseEenheid === 'mgdl' ? active : inactive));
+  if (mmol) mmol.setAttribute('style', mmol.getAttribute('style').replace(/background:[^;]+;color:[^;]+;border-color:[^;]+;/, '') + (appSettings.glucoseEenheid === 'mmol' ? active : inactive));
+
+  // Gewicht unit buttons
+  var kg = document.getElementById('btn-unit-kg');
+  var lbs = document.getElementById('btn-unit-lbs');
+  if (kg) kg.setAttribute('style', kg.getAttribute('style').replace(/background:[^;]+;color:[^;]+;border-color:[^;]+;/, '') + (appSettings.gewichtEenheid === 'kg' ? active : inactive));
+  if (lbs) lbs.setAttribute('style', lbs.getAttribute('style').replace(/background:[^;]+;color:[^;]+;border-color:[^;]+;/, '') + (appSettings.gewichtEenheid === 'lbs' ? active : inactive));
+
+  // Lengte unit buttons
+  var cm = document.getElementById('btn-unit-cm');
+  var ft = document.getElementById('btn-unit-ft');
+  if (cm) cm.setAttribute('style', cm.getAttribute('style').replace(/background:[^;]+;color:[^;]+;border-color:[^;]+;/, '') + (appSettings.lengteEenheid === 'cm' ? active : inactive));
+  if (ft) ft.setAttribute('style', ft.getAttribute('style').replace(/background:[^;]+;color:[^;]+;border-color:[^;]+;/, '') + (appSettings.lengteEenheid === 'ft' ? active : inactive));
+}
+
+function glucoseConvert(from) {
+  var mgdlEl = document.getElementById('conv-mgdl');
+  var mmolEl = document.getElementById('conv-mmol');
+  var resEl  = document.getElementById('conv-result');
+  if (!mgdlEl || !mmolEl) return;
+  if (from === 'mgdl') {
+    var v = parseFloat(mgdlEl.value);
+    if (isNaN(v)) { mmolEl.value = ''; if(resEl) resEl.textContent = ''; return; }
+    var m = Math.round(v / 18 * 10) / 10;
+    mmolEl.value = m;
+    if (resEl) resEl.textContent = v + ' mg/dL = ' + m + ' mmol/L';
+  } else {
+    var v2 = parseFloat(mmolEl.value);
+    if (isNaN(v2)) { mgdlEl.value = ''; if(resEl) resEl.textContent = ''; return; }
+    var mg = Math.round(v2 * 18);
+    mgdlEl.value = mg;
+    if (resEl) resEl.textContent = v2 + ' mmol/L = ' + mg + ' mg/dL';
+  }
+}
+
 // GLUCO BUDDY — DATA PERSISTENCE (localStorage)
 // =============================================
 const STORAGE_KEY        = 'glucoBuddyData_v2';
@@ -10086,7 +10236,7 @@ function checkAppPin() {
     _appPinAttempts = 0;
     hideAppPinScreen();
     // Load app from localStorage + try background session restore
-    loadData(); loadPassport();
+    loadData(); loadSettings(); loadPassport();
     var hdr = document.getElementById('hdr');
     var bnav = document.getElementById('bnav');
     if(hdr) hdr.style.display = '';
@@ -14613,6 +14763,7 @@ function _glucoLoadVoice() {
 
 function _glucoSpreek(tekst) {
   if(!window.speechSynthesis) return false;
+  if(appSettings && appSettings.stemAan === false) return false;
   speechSynthesis.cancel();
   var utt = new SpeechSynthesisUtterance(tekst);
   utt.lang  = 'nl-NL';
