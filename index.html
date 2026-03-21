@@ -8928,9 +8928,14 @@ function walletFileSelected(input) {
     };
     reader.readAsDataURL(file);
   } else {
-    walletImgData = 'pdf:' + file.name;
-    const prev = document.getElementById('wf-img-preview');
-    if(prev) { prev.style.display='block'; prev.innerHTML='<div style="background:var(--bg2);border-radius:10px;padding:12px;font-size:12px;font-weight:700;">📄 '+file.name+'</div>'; }
+    const pdfName = file.name;
+    const pdfReader = new FileReader();
+    pdfReader.onload = function(e) {
+      walletImgData = 'pdf:' + pdfName + ':' + e.target.result;
+      const prev = document.getElementById('wf-img-preview');
+      if(prev) { prev.style.display='block'; prev.innerHTML='<div style="background:var(--bg2);border-radius:10px;padding:12px;font-size:12px;font-weight:700;">📄 '+pdfName+'</div>'; }
+    };
+    pdfReader.readAsDataURL(file);
   }
 }
 
@@ -8938,8 +8943,9 @@ function showImgPreview(src) {
   const prev = document.getElementById('wf-img-preview');
   if(!prev) return;
   if(src.startsWith('pdf:')) {
+    var pdfDisplayName = src.split(':')[1] || src.replace('pdf:','');
     prev.style.display='block';
-    prev.innerHTML='<div style="background:var(--bg2);border-radius:10px;padding:12px;font-size:12px;font-weight:700;">📄 '+src.replace('pdf:','')+'</div>';
+    prev.innerHTML='<div style="background:var(--bg2);border-radius:10px;padding:12px;font-size:12px;font-weight:700;">📄 '+pdfDisplayName+'</div>';
   } else {
     prev.style.display='block';
     prev.innerHTML='<img src="'+src+'" style="width:100%;border-radius:10px;max-height:160px;object-fit:cover;">';
@@ -9029,6 +9035,8 @@ function renderWalletDocs() {
     }
     const hasImg = d.img && !d.img.startsWith('pdf:');
     const hasPdf = d.img && d.img.startsWith('pdf:');
+    const pdfHasData = hasPdf && d.img.indexOf(':data:') !== -1;
+    const pdfName = hasPdf ? d.img.split(':')[1] : '';
     const hasLink = d.link;
     list.innerHTML += '<div class="wdoc">'
       + '<div class="wdoc-icon" style="background:'+color+'22;">' + icon + '</div>'
@@ -9039,7 +9047,7 @@ function renderWalletDocs() {
       + expHtml
       + (hasLink ? '<br><a href="'+d.link+'" target="_blank" style="font-size:11px;font-weight:800;color:var(--primary);text-decoration:none;margin-top:4px;display:inline-block;">🔗 Document openen →</a>' : '')
       + (hasImg ? '<br><img src="'+d.img+'" style="width:100%;border-radius:8px;margin-top:6px;max-height:120px;object-fit:cover;cursor:pointer;" onclick="viewWalletImg('+realIdx+')">' : '')
-      + (hasPdf ? '<div style="background:var(--bg2);border-radius:8px;padding:8px 10px;font-size:11px;font-weight:700;margin-top:6px;">📄 '+d.img.replace("pdf:","")+'</div>' : '')
+      + (hasPdf ? '<div style="background:var(--bg2);border-radius:8px;padding:8px 10px;font-size:11px;font-weight:700;margin-top:6px;display:flex;align-items:center;justify-content:space-between;gap:8px;">📄 '+pdfName+(pdfHasData ? ' <button onclick="openWalletPdf('+realIdx+')" style="padding:4px 10px;border:none;border-radius:8px;background:var(--primary);color:white;font-family:Nunito,sans-serif;font-weight:800;font-size:11px;cursor:pointer;flex-shrink:0;">Openen</button>' : '')+'</div>' : '')
       + '<div style="font-size:10px;color:var(--muted);font-weight:600;margin-top:6px;">Toegevoegd: '+d.added+'</div>'
       + '</div>'
       + '<div style="display:flex;flex-direction:column;gap:4px;margin-left:6px;">'
@@ -9047,6 +9055,21 @@ function renderWalletDocs() {
       + '<button onclick="deleteWalletDoc('+realIdx+')" style="font-size:13px;padding:5px 8px;border:1px solid var(--border);border-radius:8px;background:white;cursor:pointer;color:#e53935;">🗑</button>'
       + '</div></div>';
   });
+}
+
+function openWalletPdf(idx) {
+  const d = walletDocs[idx];
+  if(!d || !d.img) return;
+  const parts = d.img.split(':data:');
+  if(parts.length < 2) return;
+  const base64 = 'data:' + parts[1];
+  const byteStr = atob(base64.split(',')[1]);
+  const ab = new ArrayBuffer(byteStr.length);
+  const ia = new Uint8Array(ab);
+  for(var i=0;i<byteStr.length;i++) ia[i] = byteStr.charCodeAt(i);
+  const blob = new Blob([ab], {type:'application/pdf'});
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
 }
 
 function viewWalletImg(idx) {
