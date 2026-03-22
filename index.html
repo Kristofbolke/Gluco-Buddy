@@ -288,6 +288,8 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 @keyframes dosePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
 @keyframes noodPuls{0%,100%{box-shadow:0 4px 18px rgba(220,38,38,0.55),0 0 0 0 rgba(220,38,38,0.45)}70%{box-shadow:0 4px 18px rgba(220,38,38,0.55),0 0 0 11px rgba(220,38,38,0)}}
 @keyframes glucoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+@keyframes splashDot{0%,80%,100%{transform:scale(0.6);opacity:0.35}40%{transform:scale(1);opacity:1}}
+#splash{transition:opacity 0.35s ease;}
 @keyframes glucoShadow{0%,100%{rx:22;opacity:.18}50%{rx:14;opacity:.08}}
 @keyframes glucoBlink{0%,88%,100%{transform:scaleY(1)}92%,96%{transform:scaleY(0.08)}}
 @keyframes glucoWaveL{0%,100%{transform:rotate(0deg)}30%{transform:rotate(22deg)}65%{transform:rotate(-8deg)}}
@@ -425,6 +427,41 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 </style>
 </head>
 <body>
+
+<!-- SPLASH SCREEN -->
+<div id="splash" style="position:fixed;inset:0;z-index:4000;background:#FBFCFC;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+  <svg viewBox="0 0 130 135" xmlns="http://www.w3.org/2000/svg" style="width:110px;height:114px;display:block;animation:glucoFloat 3.2s ease-in-out infinite;filter:drop-shadow(0 10px 24px rgba(237,90,7,0.32));">
+    <defs>
+      <radialGradient id="gBodySpl" cx="38%" cy="22%" r="72%">
+        <stop offset="0%" stop-color="#FF5722"/><stop offset="50%" stop-color="#E53208"/><stop offset="100%" stop-color="#BF2400"/>
+      </radialGradient>
+      <radialGradient id="gShineSpl" cx="30%" cy="30%" r="70%">
+        <stop offset="0%" stop-color="white" stop-opacity="0.75"/><stop offset="100%" stop-color="white" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <ellipse cx="65" cy="126" rx="24" ry="5" fill="rgba(150,40,0,0.18)" style="animation:glucoShadow 3.2s ease-in-out infinite;"/>
+    <path d="M65,10 C65,10 28,56 28,80 C28,103 44,118 65,118 C86,118 102,103 102,80 C102,56 65,10 65,10Z" fill="url(#gBodySpl)" style="animation:glucoHeartbeat 2.4s ease-in-out infinite;"/>
+    <ellipse cx="48" cy="50" rx="10" ry="15" fill="url(#gShineSpl)" transform="rotate(-30 48 50)"/>
+    <circle cx="53" cy="81" r="8.5" fill="white"/>
+    <circle cx="77" cy="81" r="8.5" fill="white"/>
+    <g style="transform-origin:53px 81px;animation:glucoBlink 4.5s ease-in-out infinite;">
+      <circle cx="55" cy="80" r="5" fill="#1A1A1A"/><circle cx="57" cy="78" r="1.8" fill="white"/>
+    </g>
+    <g style="transform-origin:77px 81px;animation:glucoBlink 4.5s ease-in-out infinite;">
+      <circle cx="79" cy="80" r="5" fill="#1A1A1A"/><circle cx="81" cy="78" r="1.8" fill="white"/>
+    </g>
+    <ellipse cx="43" cy="92" rx="9" ry="5.5" fill="rgba(255,100,50,0.38)"/>
+    <ellipse cx="87" cy="92" rx="9" ry="5.5" fill="rgba(255,100,50,0.38)"/>
+    <path d="M52,100 Q65,112 78,100" stroke="#1A1A1A" stroke-width="3" fill="none" stroke-linecap="round"/>
+  </svg>
+  <div style="font-family:Nunito,sans-serif;font-size:22px;font-weight:900;color:#1A1A1A;margin-top:20px;letter-spacing:-0.5px;">Gluco Buddy</div>
+  <div style="font-family:Nunito,sans-serif;font-size:12px;font-weight:600;color:#8A6A55;margin-top:4px;">Jouw diabetes assistent</div>
+  <div style="display:flex;gap:8px;margin-top:28px;">
+    <div style="width:8px;height:8px;border-radius:50%;background:#ED5A07;animation:splashDot 1.2s ease-in-out infinite;"></div>
+    <div style="width:8px;height:8px;border-radius:50%;background:#ED5A07;animation:splashDot 1.2s ease-in-out 0.2s infinite;"></div>
+    <div style="width:8px;height:8px;border-radius:50%;background:#ED5A07;animation:splashDot 1.2s ease-in-out 0.4s infinite;"></div>
+  </div>
+</div>
 
 <!-- APP PIN LOCK SCREEN -->
 <div id="app-pin-screen" style="display:none;position:fixed;inset:0;z-index:3100;background:var(--bg);overflow-y:auto;">
@@ -10233,7 +10270,15 @@ function markDisclaimerAccepted() {
   try { localStorage.setItem(DONE_KEY, '1'); } catch(e) {}
 }
 
+function hideSplash() {
+  var s = document.getElementById('splash');
+  if (!s || s.style.display === 'none') return;
+  s.style.opacity = '0';
+  setTimeout(function() { s.style.display = 'none'; }, 380);
+}
+
 function showAuthScreen() {
+  hideSplash();
   const authEl = document.getElementById('auth-screen');
   if (authEl) {
     authEl.style.display = 'block';
@@ -15012,6 +15057,7 @@ function hideNoodKaart() {
 }
 
 function initAppUI() {
+  hideSplash();
   // ── NOODKNOP zichtbaar maken ──
   document.getElementById('nood-btn').style.display='block';
 
