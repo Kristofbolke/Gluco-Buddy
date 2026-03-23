@@ -3557,6 +3557,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
       <div id="pp-sec-diabetes" style="padding:0 14px 14px;">
         <div id="pp-view-diabetes">
           <div class="pp-row"><span class="pp-lbl">Type diabetes</span><span class="pp-val" data-field="pp-type">—</span></div>
+          <div class="pp-row" id="pp-row-traject" style="display:none;"><span class="pp-lbl">Diabeteszorg</span><span class="pp-val" id="pp-val-traject">—</span></div>
           <div class="pp-row"><span class="pp-lbl">Glucosemeter</span><span class="pp-val" data-field="pp-meter" id="pp-row-meter">—</span></div>
           <div class="pp-row"><span class="pp-lbl">Sensor</span><span class="pp-val" data-field="pp-sens">—</span></div>
           <div class="pp-row"><span class="pp-lbl">Nuchter doel</span><span class="pp-val" data-field="pp-nucht">—</span></div>
@@ -3569,6 +3570,27 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
             <select class="ifl" id="ppe-diabtype" style="font-family:Nunito,sans-serif;font-size:13px;">
               <option value="">—</option><option>Type 1</option><option>Type 2</option><option>LADA</option><option>Andere</option>
             </select>
+          </div>
+          <div class="ig" style="margin-bottom:8px;">
+            <label class="il">Diabeteszorg</label>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:2px solid var(--border);border-radius:12px;cursor:pointer;background:white;">
+                <input type="radio" name="ppe-traject" id="ppe-traject-zorg" value="zorgtraject" style="accent-color:var(--primary);width:16px;height:16px;flex-shrink:0;" onchange="ppTrajectChange()">
+                <span style="font-size:13px;font-weight:700;color:var(--text);">Zorgtraject</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:2px solid var(--border);border-radius:12px;cursor:pointer;background:white;">
+                <input type="radio" name="ppe-traject" id="ppe-traject-conv" value="conventie" style="accent-color:var(--primary);width:16px;height:16px;flex-shrink:0;" onchange="ppTrajectChange()">
+                <span style="font-size:13px;font-weight:700;color:var(--text);">Diabetesconventie</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:2px solid var(--border);border-radius:12px;cursor:pointer;background:white;">
+                <input type="radio" name="ppe-traject" id="ppe-traject-geen" value="geen" style="accent-color:var(--primary);width:16px;height:16px;flex-shrink:0;" onchange="ppTrajectChange()">
+                <span style="font-size:13px;font-weight:700;color:var(--text);">Geen van beide</span>
+              </label>
+            </div>
+            <div id="ppe-traject-datum-blok" style="display:none;margin-top:8px;">
+              <label class="il">Startdatum</label>
+              <input class="ifl" type="date" id="ppe-traject-datum">
+            </div>
           </div>
           <div class="ig" style="margin-bottom:8px;"><label class="il">Glucosemeter</label><input class="ifl" id="ppe-meter" placeholder="bv. Contour Next, Accu-Chek..."></div>
           <div class="ig" style="margin-bottom:8px;"><label class="il">Sensor</label>
@@ -5550,6 +5572,10 @@ function ppEditSection(sec) {
     ppAgePreview();
   } else if(sec === 'diabetes') {
     document.getElementById('ppe-diabtype').value = passport.diabetesType||'';
+    var _tval = passport.diabetesTraject||'';
+    document.querySelectorAll('input[name="ppe-traject"]').forEach(function(inp){ inp.checked = (inp.value === _tval); });
+    var _tdEl = document.getElementById('ppe-traject-datum'); if(_tdEl) _tdEl.value = passport.diabetesTrajectDatum||'';
+    ppTrajectChange();
     document.getElementById('ppe-meter').value = (passport.meters||[]).join(', ')||'';
     document.getElementById('ppe-sensor').value = passport.sensorType||'';
     document.getElementById('ppe-nucht').value = passport.doelNuchter||'';
@@ -5617,6 +5643,10 @@ function ppSaveSection(sec) {
     passport.allergieën = (document.getElementById('ppe-allergieën').value||'').trim();
   } else if(sec === 'diabetes') {
     passport.diabetesType = document.getElementById('ppe-diabtype').value||'';
+    var _tSel = document.querySelector('input[name="ppe-traject"]:checked');
+    passport.diabetesTraject = _tSel ? _tSel.value : '';
+    passport.diabetesTrajectDatum = (_tSel && _tSel.value !== 'geen') ? (document.getElementById('ppe-traject-datum').value||'') : '';
+    ppUpdateTrajectView();
     var meterVal = (document.getElementById('ppe-meter').value||'').trim();
     passport.meetMeter = !!meterVal;
     passport.meters = meterVal ? meterVal.split(',').map(function(m){ return m.trim(); }).filter(Boolean) : [];
@@ -13277,6 +13307,29 @@ ${p.lengte || p.gewicht ? `
 }
 
 
+function ppTrajectChange() {
+  var sel = document.querySelector('input[name="ppe-traject"]:checked');
+  var blok = document.getElementById('ppe-traject-datum-blok');
+  if (blok) blok.style.display = (sel && sel.value !== 'geen') ? 'block' : 'none';
+}
+
+function ppUpdateTrajectView() {
+  var row = document.getElementById('pp-row-traject');
+  var val = document.getElementById('pp-val-traject');
+  if (!row || !val) return;
+  var t = passport.diabetesTraject || '';
+  if (!t) { row.style.display = 'none'; return; }
+  row.style.display = '';
+  var labels = {zorgtraject: '📋 Zorgtraject', conventie: '🏥 Diabetesconventie', geen: 'Geen van beide'};
+  var txt = labels[t] || t;
+  if (passport.diabetesTrajectDatum && t !== 'geen') {
+    var d = new Date(passport.diabetesTrajectDatum);
+    var months = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+    txt += ' · sinds ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+  }
+  val.textContent = txt;
+}
+
 function refreshPassportHeader() {
   // Adres line
   const adresEl = document.getElementById('pp-adres-line');
@@ -13295,6 +13348,7 @@ function refreshPassportHeader() {
     if(meter && meter.textContent && meter.textContent !== '—') parts.push(meter.textContent);
     metingEl.textContent = parts.join(' · ') || '—';
   }
+  ppUpdateTrajectView();
   // HbA1c combined
   const hba1cEl = document.getElementById('pp-hba1c-combined');
   if(hba1cEl) {
