@@ -3870,22 +3870,43 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
   <!-- INVOER KAART -->
   <div class="card">
     <div class="ct">❤️ Bloeddruk invoeren</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;">
-      <div class="ig" style="margin-bottom:0;">
-        <label class="il">Systolisch</label>
-        <input class="ifl" type="number" id="bp-sys" placeholder="120" min="60" max="250" oninput="calcBP()" style="text-align:center;">
-        <div style="font-size:9px;color:var(--muted);font-weight:600;margin-top:3px;text-align:center;">mmHg</div>
+
+    <!-- Veld-selectie (tik om actief te maken) -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
+      <div id="bp-box-sys" onclick="bpKpSetActive('sys')" style="border:2.5px solid var(--primary);background:#FFF5EF;border-radius:14px;padding:10px 6px;text-align:center;cursor:pointer;transition:border-color 0.15s,background 0.15s;">
+        <div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Systolisch</div>
+        <div id="bp-disp-sys" style="font-family:'Space Mono',monospace;font-size:32px;font-weight:700;color:var(--primary);line-height:1;">—</div>
+        <div style="font-size:9px;color:var(--muted);font-weight:600;margin-top:3px;">mmHg</div>
       </div>
-      <div class="ig" style="margin-bottom:0;">
-        <label class="il">Diastolisch</label>
-        <input class="ifl" type="number" id="bp-dia" placeholder="80" min="40" max="150" oninput="calcBP()" style="text-align:center;">
-        <div style="font-size:9px;color:var(--muted);font-weight:600;margin-top:3px;text-align:center;">mmHg</div>
+      <div id="bp-box-dia" onclick="bpKpSetActive('dia')" style="border:2px solid var(--border);background:white;border-radius:14px;padding:10px 6px;text-align:center;cursor:pointer;transition:border-color 0.15s,background 0.15s;">
+        <div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Diastolisch</div>
+        <div id="bp-disp-dia" style="font-family:'Space Mono',monospace;font-size:32px;font-weight:700;color:var(--text);line-height:1;">—</div>
+        <div style="font-size:9px;color:var(--muted);font-weight:600;margin-top:3px;">mmHg</div>
       </div>
-      <div class="ig" style="margin-bottom:0;">
-        <label class="il">Hartslag</label>
-        <input class="ifl" type="number" id="bp-hr" placeholder="72" min="30" max="220" oninput="calcBP()" style="text-align:center;">
-        <div style="font-size:9px;color:var(--muted);font-weight:600;margin-top:3px;text-align:center;">bpm</div>
+      <div id="bp-box-hr" onclick="bpKpSetActive('hr')" style="border:2px solid var(--border);background:white;border-radius:14px;padding:10px 6px;text-align:center;cursor:pointer;transition:border-color 0.15s,background 0.15s;">
+        <div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Hartslag</div>
+        <div id="bp-disp-hr" style="font-family:'Space Mono',monospace;font-size:32px;font-weight:700;color:var(--text);line-height:1;">—</div>
+        <div style="font-size:9px;color:var(--muted);font-weight:600;margin-top:3px;">bpm</div>
       </div>
+    </div>
+
+    <!-- Verborgen inputs voor calcBP/saveBP compatibiliteit -->
+    <input type="hidden" id="bp-sys"><input type="hidden" id="bp-dia"><input type="hidden" id="bp-hr">
+
+    <!-- Custom cijfertoetsenbord -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
+      <button class="kp-btn" onclick="bpKpPress(1)">1</button>
+      <button class="kp-btn" onclick="bpKpPress(2)">2</button>
+      <button class="kp-btn" onclick="bpKpPress(3)">3</button>
+      <button class="kp-btn" onclick="bpKpPress(4)">4</button>
+      <button class="kp-btn" onclick="bpKpPress(5)">5</button>
+      <button class="kp-btn" onclick="bpKpPress(6)">6</button>
+      <button class="kp-btn" onclick="bpKpPress(7)">7</button>
+      <button class="kp-btn" onclick="bpKpPress(8)">8</button>
+      <button class="kp-btn" onclick="bpKpPress(9)">9</button>
+      <button class="kp-btn" onclick="bpKpPress(-1)" style="background:#FFF0E8;color:var(--primary);">✕</button>
+      <button class="kp-btn" onclick="bpKpPress(0)">0</button>
+      <button class="kp-btn" onclick="bpKpPress(-2)" style="background:#F5F5F5;">⌫</button>
     </div>
     <div style="display:flex;gap:7px;margin-bottom:14px;overflow-x:auto;">
       <button class="mtab a" onclick="setBPctx(this,'Rust')">😌 Rust</button>
@@ -4563,7 +4584,7 @@ function showSc(name){
   const nv=navSc.includes(name)?name:(['bmi','meds','cal','edu','passport','qa','log','notifs','achievements','backup','wallet','admin','sensor','bp','apotheek','about','input','injectie','hypo','heatmap','hba1c','libre','doses','reports','voorschrift'].includes(name)?'more':name);
   document.getElementById('nav-'+nv)?.classList.add('act');
   if(name==='graphs')setTimeout(()=>initChart('day'),80);
-  if(name==='bp'){renderBPLog();renderBPStats();setTimeout(()=>initBPChart('week'),80);setTimeout(()=>{var el=document.getElementById('bp-sys');if(el)el.focus();},300);}
+  if(name==='bp'){renderBPLog();renderBPStats();setTimeout(()=>initBPChart('week'),80);setTimeout(bpKpReset,50);}
   if(name==='meds')renderMeds();
   if(name==='log')renderLogScreen();
   if(name==='cal'){renderCal();renderAppts();setTimeout(renderOzCard,50);}
@@ -7966,6 +7987,64 @@ function getBPcat(sys, dia) {
   return {label:'Hypertensie graad 2', color:'#C0392B', bg:'#FADBD8', id:'bpc-h2'};
 }
 
+// ── Bloeddruk custom toetsenbord ──────────────────────────────────────────────
+var bpKpActive = 'sys';
+var bpKpVals = {sys:'', dia:'', hr:''};
+
+function bpKpSetActive(field) {
+  bpKpActive = field;
+  ['sys','dia','hr'].forEach(function(f) {
+    var box = document.getElementById('bp-box-' + f);
+    if (!box) return;
+    if (f === field) {
+      box.style.borderWidth = '2.5px';
+      box.style.borderColor = 'var(--primary)';
+      box.style.background = '#FFF5EF';
+      var disp = document.getElementById('bp-disp-' + f);
+      if (disp) disp.style.color = 'var(--primary)';
+    } else {
+      box.style.borderWidth = '2px';
+      box.style.borderColor = 'var(--border)';
+      box.style.background = 'white';
+      var disp2 = document.getElementById('bp-disp-' + f);
+      if (disp2) disp2.style.color = bpKpVals[f] ? 'var(--text)' : 'var(--muted)';
+    }
+  });
+}
+
+function bpKpPress(n) {
+  var f = bpKpActive;
+  if (n === -1) { bpKpVals[f] = ''; }
+  else if (n === -2) { bpKpVals[f] = bpKpVals[f].slice(0, -1); }
+  else {
+    if (bpKpVals[f].length >= 3) return;
+    bpKpVals[f] += String(n);
+    // Auto-advance na 3 cijfers
+    if (bpKpVals[f].length === 3) {
+      if (f === 'sys') setTimeout(function(){ bpKpSetActive('dia'); }, 120);
+      else if (f === 'dia') setTimeout(function(){ bpKpSetActive('hr'); }, 120);
+    }
+  }
+  bpKpUpdate();
+}
+
+function bpKpUpdate() {
+  ['sys','dia','hr'].forEach(function(f) {
+    var disp = document.getElementById('bp-disp-' + f);
+    var inp = document.getElementById('bp-' + f);
+    if (disp) { disp.textContent = bpKpVals[f] || '—'; }
+    if (inp) inp.value = bpKpVals[f];
+  });
+  calcBP();
+}
+
+function bpKpReset() {
+  bpKpVals = {sys:'', dia:'', hr:''};
+  bpKpUpdate();
+  bpKpSetActive('sys');
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 function calcBP() {
   const sys = parseInt(document.getElementById('bp-sys').value);
   const dia = parseInt(document.getElementById('bp-dia').value);
@@ -8013,10 +8092,8 @@ function saveBP() {
   newEntry.innerHTML = '<div class="lic" style="background:#FDEDEC;">❤️</div><div style="flex:1;"><div class="lt">Bloeddruk meting</div><div class="lsu">'+timeStr+' · '+bpCtx+'</div></div><div style="text-align:right;"><div class="lv" style="color:'+cat.color+';">'+sys+'/'+dia+'</div><span class="tag '+tagClass+'">'+cat.label+'</span></div>';
   log.insertBefore(newEntry, log.firstChild);
 
-  // Clear inputs
-  document.getElementById('bp-sys').value='';
-  document.getElementById('bp-dia').value='';
-  document.getElementById('bp-hr').value='';
+  // Clear inputs + reset custom keypad
+  bpKpReset();
   document.getElementById('bp-result-card').style.display='none';
   document.getElementById('bp-save-btn').disabled=true;
   document.getElementById('bp-save-btn').style.opacity='0.5';
