@@ -3116,6 +3116,15 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
       <div class="ig" style="margin-bottom:0;"><label class="il">Vervaldatum</label><input class="ifl" type="month" id="mf-exp"></div>
     </div>
 
+    <!-- Flexpen: IE in huidige open pen (enkel zichtbaar bij flexpennen) -->
+    <div id="mf-pen-open-blok" style="display:none;margin-bottom:12px;">
+      <div class="ig" style="margin-bottom:0;">
+        <label class="il">IE resterend in huidige open pen</label>
+        <input class="ifl" type="number" id="mf-pen-ie-left" placeholder="bv. 300 (volle pen)" min="0">
+        <div style="font-size:10px;color:var(--muted);font-weight:600;margin-top:3px;">Laat leeg voor een volle nieuwe pen</div>
+      </div>
+    </div>
+
     <!-- Hidden fields for backward compat -->
     <input type="hidden" id="mf-dose-per" value="1">
     <input type="hidden" id="mf-qty" value="0">
@@ -4758,13 +4767,19 @@ function logLong(){
   var name = lm ? lm.name : 'Langwerkende insuline';
   var time = new Date().toLocaleTimeString('nl-BE',{hour:'2-digit',minute:'2-digit'});
   var stockMsg = '';
-  // Reduce stock
+  // Reduce stock — voor flexpennen: enkel van open pen aftrekken
   if(lm) {
     var upp = lm.unitsPerPen || DEFAULT_IE_PER_PEN[lm.name] || 300;
-    var newQty = Math.max(0, parseFloat((lm.qty - (tot+2)/upp).toFixed(3)));
-    lm.qty = newQty;
-    var ieLeft = Math.round(newQty * upp);
-    stockMsg = name+': '+ieLeft+' IE resterend ('+parseFloat(newQty.toFixed(1))+' '+lm.unit+')';
+    if(lm.unit === 'flexpennen' && lm.penIELeft != null) {
+      lm.penIELeft = Math.max(0, lm.penIELeft - (tot + 2));
+      lm.qty = (lm.penVoorraad||0) + lm.penIELeft / upp;
+      stockMsg = name+': '+lm.penIELeft+' IE resterend in huidige pen · '+( lm.penVoorraad||0)+' '+(lm.penVoorraad===1?'pen':'pennen')+' in voorraad';
+      if(lm.penIELeft < 20) stockMsg += ' ⚠️ Pen bijna leeg!';
+    } else {
+      var newQty = Math.max(0, parseFloat((lm.qty - (tot+2)/upp).toFixed(3)));
+      lm.qty = newQty;
+      stockMsg = name+': '+Math.round(newQty * upp)+' IE resterend ('+parseFloat(newQty.toFixed(1))+' '+lm.unit+')';
+    }
     renderMeds(); autosave();
   }
   // Toast
@@ -5078,21 +5093,31 @@ function logIns(){
   }
 
   if(insIdx>=0 && doseUnits>0){
-    const oldQty = meds[insIdx].qty;
-    const unitsPerPen = meds[insIdx].unitsPerPen || DEFAULT_IE_PER_PEN[meds[insIdx].name] || 300;
-    const totalUnits = doseUnits + 2; // dosis + 2 IE priming/buffer
-    const newQty = Math.max(0, parseFloat((oldQty - totalUnits/unitsPerPen).toFixed(3)));
-    meds[insIdx].qty = newQty;
-    const minSt = meds[insIdx].minStock||0;
-    const isBelowMin = minSt>0 && newQty<=minSt;
-    const pct = Math.round((newQty/meds[insIdx].max)*100);
-    var upp2 = meds[insIdx].unitsPerPen||DEFAULT_IE_PER_PEN[meds[insIdx].name]||300;
-    var ieLeft = Math.round(newQty * upp2);
-    stockMsg = meds[insIdx].name+': '+ieLeft+' IE resterend ('+parseFloat(newQty.toFixed(1))+' '+meds[insIdx].unit+')'+(isBelowMin?' ⚠️ Onder minimum!':'');
+    var _sm = meds[insIdx];
+    var upp2 = _sm.unitsPerPen || DEFAULT_IE_PER_PEN[_sm.name] || 300;
+    if(_sm.unit === 'flexpennen' && _sm.penIELeft != null) {
+      // Flexpen: enkel van open pen aftrekken
+      _sm.penIELeft = Math.max(0, _sm.penIELeft - (doseUnits + 2));
+      _sm.qty = (_sm.penVoorraad||0) + _sm.penIELeft / upp2;
+      stockMsg = _sm.name+': '+_sm.penIELeft+' IE resterend in huidige pen · '+(_sm.penVoorraad||0)+' '+((_sm.penVoorraad||0)===1?'pen':'pennen')+' in voorraad';
+      if(_sm.penIELeft < 20) {
+        showMedToast('⚠️ '+_sm.name+' bijna leeg! Open een nieuwe pen.', 'var(--warn)', 4000);
+        stockMsg += ' ⚠️ Pen bijna leeg!';
+      }
+      if(_sm.penVoorraad <= 0 && _sm.penIELeft < upp2 * 0.2) {
+        showMedToast('⚠️ Geen pens meer in voorraad voor '+_sm.name+'! Bestel tijdig bij.', 'var(--danger)', 5000);
+      }
+    } else {
+      var oldQty = _sm.qty;
+      var newQty = Math.max(0, parseFloat((oldQty - (doseUnits+2)/upp2).toFixed(3)));
+      _sm.qty = newQty;
+      var minSt = _sm.minStock||0;
+      var isBelowMin = minSt>0 && newQty<=minSt;
+      stockMsg = _sm.name+': '+Math.round(newQty*upp2)+' IE resterend ('+parseFloat(newQty.toFixed(1))+' '+_sm.unit+')'+(isBelowMin?' ⚠️ Onder minimum!':'');
+      if(isBelowMin) showMedToast('⚠️ Lage voorraad: '+_sm.name+'! Bestel tijdig bij.', 'var(--danger)', 4000);
+    }
     renderMeds();
-    // Show low stock warning if below minimum
-    if(isBelowMin) showMedToast('⚠️ Lage voorraad: '+meds[insIdx].name+'! Bestel tijdig bij.', 'var(--danger)', 4000);
-  autosave();
+    autosave();
   }
 
   // Show inline confirmation
@@ -6391,22 +6416,40 @@ function renderMeds(){
             +'<button onclick="delMed('+i+')" style="width:34px;height:34px;border:1px solid #ffd0d0;border-radius:10px;background:#fff5f5;cursor:pointer;font-size:15px;color:#e53935;display:flex;align-items:center;justify-content:center;">🗑</button>'
           +'</div>'
         +'</div>'
-        +'<div style="display:flex;align-items:center;gap:8px;">'
-          +'<div style="flex:1;height:7px;background:#F0E8E0;border-radius:4px;overflow:hidden;">'
-            +'<div style="height:100%;width:'+Math.min(100,pct)+'%;background:'+col+';border-radius:4px;transition:width 0.4s;"></div>'
+        +(function(){
+          if(m.unit === 'flexpennen' && m.penIELeft != null) {
+            var _upp = m.unitsPerPen || DEFAULT_IE_PER_PEN[m.name] || 300;
+            var _pct = Math.min(100, Math.round((m.penIELeft / _upp) * 100));
+            var _col = m.penVoorraad <= 0 ? 'var(--danger)' : _pct > 40 ? 'var(--ok)' : _pct > 15 ? 'var(--warn)' : 'var(--danger)';
+            var _warn = m.penVoorraad <= 0 && m.penIELeft < _upp * 0.2;
+            return '<div style="background:var(--bg2);border-radius:10px;padding:8px 10px;margin-top:4px;">'
+              +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'
+                +'<div style="flex:1;height:7px;background:#F0E8E0;border-radius:4px;overflow:hidden;">'
+                  +'<div style="height:100%;width:'+_pct+'%;background:'+_col+';border-radius:4px;transition:width 0.4s;"></div>'
+                +'</div>'
+                +'<div style="font-size:12px;font-weight:800;color:'+_col+';white-space:nowrap;">'+m.penIELeft+' IE</div>'
+              +'</div>'
+              +'<div style="display:flex;align-items:center;justify-content:space-between;">'
+                +'<div style="font-size:11px;color:var(--muted);font-weight:700;">📦 '+m.penVoorraad+' '+(m.penVoorraad===1?'pen':'pennen')+' in voorraad</div>'
+                +'<button onclick="openNieuwePen('+i+')" style="padding:5px 10px;background:var(--primary);color:white;border:none;border-radius:8px;font-family:Nunito,sans-serif;font-size:11px;font-weight:800;cursor:pointer;">🔄 Nieuwe pen</button>'
+              +'</div>'
+              +(_warn?'<div style="font-size:11px;color:var(--danger);font-weight:700;margin-top:4px;">⚠️ Geen pens meer in voorraad — bestel bij!</div>':'')
+            +'</div>';
+          }
+          var isPen = m.unit==='flacons'||m.unit==='ampullen';
+          var upp = m.unitsPerPen||300;
+          var qtyIE = Math.round(m.qty * upp);
+          return '<div style="display:flex;align-items:center;gap:8px;">'
+            +'<div style="flex:1;height:7px;background:#F0E8E0;border-radius:4px;overflow:hidden;">'
+              +'<div style="height:100%;width:'+Math.min(100,pct)+'%;background:'+col+';border-radius:4px;transition:width 0.4s;"></div>'
+            +'</div>'
+            +(isPen && m.unitsPerPen>0
+              ? '<div style="font-size:12px;font-weight:800;color:'+col+';white-space:nowrap;min-width:80px;text-align:right;">'+qtyIE+' IE<span style="font-size:10px;font-weight:600;color:var(--muted);margin-left:4px;">('+parseFloat(m.qty.toFixed(1))+' '+m.unit+')</span></div>'
+              : '<div style="font-size:12px;font-weight:800;color:'+col+';white-space:nowrap;min-width:70px;text-align:right;">'+parseFloat(m.qty.toFixed(1))+' / '+m.max+'<span style="font-size:10px;font-weight:600;color:var(--muted);margin-left:3px;">'+m.unit+'</span></div>'
+            )
           +'</div>'
-          +(function(){
-            var isPen = m.unit==='flexpennen'||m.unit==='flacons'||m.unit==='ampullen';
-            var upp = m.unitsPerPen||300;
-            var qtyIE = Math.round(m.qty * upp);
-            var maxIE = Math.round(m.max * upp);
-            if(isPen && m.unitsPerPen>0){
-              return '<div style="font-size:12px;font-weight:800;color:'+col+';white-space:nowrap;min-width:80px;text-align:right;">'+qtyIE+' IE<span style="font-size:10px;font-weight:600;color:var(--muted);margin-left:4px;">('+parseFloat(m.qty.toFixed(1))+' '+m.unit+')</span></div>';
-            }
-            return '<div style="font-size:12px;font-weight:800;color:'+col+';white-space:nowrap;min-width:70px;text-align:right;">'+parseFloat(m.qty.toFixed(1))+' / '+m.max+'<span style="font-size:10px;font-weight:600;color:var(--muted);margin-left:3px;">'+m.unit+'</span></div>';
-          })()
-        +'</div>'
-        +(isBelowMin?'<div style="font-size:11px;color:var(--danger);font-weight:700;margin-top:6px;">⚠️ Lage voorraad — vul aan!</div>':'')
+          +(isBelowMin?'<div style="font-size:11px;color:var(--danger);font-weight:700;margin-top:6px;">⚠️ Lage voorraad — vul aan!</div>':'');
+        })()
         +'</div>';
     });
   }
@@ -6445,9 +6488,10 @@ function mfBerekenVoorraad() {
 function toggleUnitsPerField() {
   var unit = (document.getElementById('mf-unit')||{}).value||'';
   var wrap = document.getElementById('mf-units-per-wrap');
-  var qtyLbl = document.querySelector('label[for="mf-qty"], #mf-qty')?.closest('.ig')?.querySelector('.il');
+  var penBlok = document.getElementById('mf-pen-open-blok');
   var isPen = unit==='flexpennen'||unit==='flacons'||unit==='ampullen';
   if(wrap) wrap.style.display = isPen ? 'block' : 'none';
+  if(penBlok) penBlok.style.display = unit==='flexpennen' ? 'block' : 'none';
 }
 
 // Default IE per pen by insulin type name
@@ -6536,6 +6580,13 @@ function openMedForm(idx){
     _setV('mf-dose-per',m.dosePerIntake||1);
     _setV('mf-units-per',m.unitsPerPen||m.eenhedenPerVerpakking||0);
     _setV('mf-detail',m.detail||m.dosering||'');
+    // Flexpen: laad penVoorraad en toon juiste velden
+    if(m.unit === 'flexpennen') {
+      _setV('mf-aantal-verpakkingen', m.penVoorraad != null ? m.penVoorraad : (m.aantalVerpakkingen||''));
+      _setV('mf-pen-ie-left', ''); // leeg laten — huidige waarde bewaren bij opslaan
+      var _penBlok = document.getElementById('mf-pen-open-blok');
+      if(_penBlok) { _penBlok.style.display = 'block'; var _ph = document.getElementById('mf-pen-ie-left'); if(_ph) _ph.placeholder = 'Huidig: '+(m.penIELeft||m.unitsPerPen||300)+' IE'; }
+    }
     setTimeout(mfBerekenVoorraad,50);
     setTimeout(function(){ setMedCat(m.cat||'diabetes'); },50);
     setMfTijdstip(m.tijdstip||'');
@@ -6603,6 +6654,18 @@ function saveMed(){
     detail:dosering,
     exp:(document.getElementById('mf-exp')||{}).value||''
   };
+  // Flexpen: aparte penVoorraad en penIELeft
+  if(med.unit === 'flexpennen') {
+    var _upp = med.unitsPerPen || DEFAULT_IE_PER_PEN[nm] || 300;
+    med.penVoorraad = Math.max(0, Math.round(av || 0));
+    var _ieLeftInput = parseFloat((document.getElementById('mf-pen-ie-left')||{}).value)||0;
+    // Bewaar bestaande penIELeft als we bewerken (tenzij gebruiker iets ingevuld heeft)
+    var _existingIELeft = (idx>=0 && meds[idx] && meds[idx].unit==='flexpennen') ? (meds[idx].penIELeft||_upp) : _upp;
+    med.penIELeft = _ieLeftInput > 0 ? Math.min(_ieLeftInput, _upp) : _existingIELeft;
+    med.unitsPerPen = _upp;
+    med.qty = med.penVoorraad + med.penIELeft / _upp;
+    med.max = Math.max(med.qty, (med.penVoorraad + 1));
+  }
   if(idx>=0) meds[idx]=med; else meds.push(med);
   cancelMedForm();
   renderMeds();
@@ -13307,6 +13370,38 @@ ${p.lengte || p.gewicht ? `
 }
 
 
+function openNieuwePen(idx) {
+  var m = meds[idx];
+  if(!m || m.unit !== 'flexpennen') return;
+  if((m.penVoorraad||0) <= 0) {
+    showMedToast('⚠️ Geen pens meer in voorraad voor '+m.name+'! Bestel bij.', 'var(--danger)', 4000);
+    return;
+  }
+  var _upp = m.unitsPerPen || DEFAULT_IE_PER_PEN[m.name] || 300;
+  // Bevestigingsdialoog
+  var conf = document.createElement('div');
+  conf.style.cssText = 'position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;padding:20px;';
+  conf.innerHTML = '<div style="background:white;border-radius:20px;padding:24px;max-width:320px;width:100%;text-align:center;">'
+    +'<div style="font-size:32px;margin-bottom:12px;">💉</div>'
+    +'<div style="font-size:16px;font-weight:900;margin-bottom:8px;">Nieuwe pen openen?</div>'
+    +'<div style="font-size:13px;color:var(--muted);font-weight:600;margin-bottom:20px;">'+m.name+' — 1 pen wordt afgetrokken van voorraad<br><strong>'+(m.penVoorraad-1)+'</strong> '+(m.penVoorraad-1===1?'pen':'pennen')+' resterend na openen</div>'
+    +'<div style="display:flex;gap:10px;">'
+      +'<button id="_np_cancel" style="flex:1;padding:12px;border:2px solid var(--border);border-radius:12px;background:white;font-family:Nunito,sans-serif;font-weight:800;font-size:13px;cursor:pointer;">Annuleren</button>'
+      +'<button id="_np_ok" style="flex:1;padding:12px;border:none;border-radius:12px;background:var(--primary);color:white;font-family:Nunito,sans-serif;font-weight:800;font-size:13px;cursor:pointer;">✅ Openen</button>'
+    +'</div>'
+  +'</div>';
+  document.body.appendChild(conf);
+  conf.querySelector('#_np_cancel').onclick = function(){ conf.remove(); };
+  conf.querySelector('#_np_ok').onclick = function(){
+    conf.remove();
+    m.penVoorraad = Math.max(0, (m.penVoorraad||0) - 1);
+    m.penIELeft = _upp;
+    m.qty = m.penVoorraad + m.penIELeft / _upp;
+    renderMeds(); autosave();
+    showMedToast('✅ Nieuwe pen '+m.name+' geopend · '+m.penVoorraad+' '+(m.penVoorraad===1?'pen':'pennen')+' resterend', 'var(--ok)', 3500);
+  };
+}
+
 function ppTrajectChange() {
   var sel = document.querySelector('input[name="ppe-traject"]:checked');
   var blok = document.getElementById('ppe-traject-datum-blok');
@@ -14975,8 +15070,10 @@ function checkReminders(onOpen) {
   // ── 3. SENSOR waarschuwingen ──────────────────────────────
   if(sensorData.start) {
     var sStart = new Date(sensorData.start);
-    var sEnd = new Date(sStart);
-    sEnd.setDate(sEnd.getDate() + parseInt(sensorData.duration || 14));
+    var _sh = parseInt((sensorData.startTime||'00:00').split(':')[0])||0;
+    var _sm = parseInt((sensorData.startTime||'00:00').split(':')[1])||0;
+    sStart.setHours(_sh, _sm, 0, 0);
+    var sEnd = new Date(sStart.getTime() + parseInt(sensorData.duration || 14) * 86400000);
     var daysLeft = Math.ceil((sEnd - now) / 86400000);
     [7, 3, 1, 0].forEach(function(d) {
       var sw = reminders.sensorWarnings;
