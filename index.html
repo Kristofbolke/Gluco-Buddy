@@ -3111,9 +3111,14 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
       <div class="ig" style="margin-bottom:0;"><label class="il">Verpakkingen in voorraad</label><input class="ifl" type="number" id="mf-aantal-verpakkingen" placeholder="bv. 2" min="0" step="0.5" oninput="mfBerekenVoorraad()"></div>
       <div class="ig" style="margin-bottom:0;"><label class="il">Totale voorraad (berekend)</label><div id="mf-totale-voorraad-display" style="padding:10px 12px;background:var(--bg2);border-radius:10px;font-size:14px;font-weight:900;color:var(--primary);border:1.5px solid var(--border);height:42px;display:flex;align-items:center;">—</div></div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
       <div class="ig" style="margin-bottom:0;"><label class="il">Min. voorraad (waarschuwing)</label><input class="ifl" type="number" id="mf-min-stock" placeholder="bv. 10" min="0"><div style="font-size:10px;color:var(--muted);font-weight:600;margin-top:3px;">Melding onder dit aantal</div></div>
       <div class="ig" style="margin-bottom:0;"><label class="il">Vervaldatum</label><input class="ifl" type="month" id="mf-exp"></div>
+    </div>
+    <div class="ig" style="margin-bottom:12px;">
+      <label class="il">Eenheden per inname</label>
+      <input class="ifl" type="number" id="mf-dose-per" placeholder="bv. 1" min="0.5" step="0.5" value="1">
+      <div style="font-size:10px;color:var(--muted);font-weight:600;margin-top:3px;">Wordt afgetrokken bij dagelijkse checklist</div>
     </div>
 
     <!-- Flexpen: IE in huidige open pen (enkel zichtbaar bij flexpennen) -->
@@ -3126,7 +3131,6 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
     </div>
 
     <!-- Hidden fields for backward compat -->
-    <input type="hidden" id="mf-dose-per" value="1">
     <input type="hidden" id="mf-qty" value="0">
     <input type="hidden" id="mf-max" value="100">
     <input type="hidden" id="mf-units-per" value="0">
