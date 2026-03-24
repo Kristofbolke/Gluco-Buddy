@@ -13919,21 +13919,29 @@ function renderBen() {
   list.innerHTML = benodigdheden.map(function(b,i){
     const ic = BEN_ICONS[b.type]||'📦';
     const low = b.min>0 && b.qty<=b.min;
+    const qtyCol = low ? 'var(--danger)' : b.qty>b.min*2 ? 'var(--ok)' : 'var(--warn)';
     return '<div class="benodigdheid-item">'
       +'<div style="display:flex;align-items:center;gap:10px;">'
         +'<div style="font-size:22px;">'+ic+'</div>'
-        +'<div style="flex:1;">'
+        +'<div style="flex:1;min-width:0;">'
           +'<div style="font-weight:900;font-size:13px;">'+b.name+'</div>'
-          +'<div style="font-size:11px;color:var(--muted);font-weight:600;">'+(b.detail||'')+(low?' · ⚠️ Laag':'')+'</div>'
+          +'<div style="font-size:11px;color:var(--muted);font-weight:600;">'+(b.detail||'')+(low?' · <span style="color:var(--danger);">⚠️ Laag</span>':'')+'</div>'
         +'</div>'
-        +'<div style="display:flex;align-items:center;gap:6px;">'
-          +'<div class="apo-check'+(b.apotheek?' on':'')+'" onclick="toggleBenApo('+i+')" title="Op apotheeklijst">'+(b.apotheek?'🛒':'')+'</div>'
+        +'<div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">'
+          +'<button onclick="adjBen('+i+',-1)" style="width:28px;height:28px;border-radius:50%;background:var(--bg2);border:1.5px solid var(--border);font-size:16px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">−</button>'
+          +'<div style="min-width:38px;text-align:center;font-size:14px;font-weight:900;color:'+qtyCol+';">'+b.qty+'</div>'
+          +'<button onclick="adjBen('+i+',1)" style="width:28px;height:28px;border-radius:50%;background:var(--bg2);border:1.5px solid var(--border);font-size:16px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">+</button>'
+          +'<div class="apo-check'+(b.apotheek?' on':'')+'" onclick="toggleBenApo('+i+')" title="Op apotheeklijst" style="margin-left:2px;">'+(b.apotheek?'🛒':'')+'</div>'
           +'<button onclick="openBenForm('+i+')" style="font-size:13px;padding:5px 9px;border:1px solid #e0e0e0;border-radius:8px;background:white;cursor:pointer;">✏️</button>'
           +'<button onclick="delBen('+i+')" style="font-size:13px;padding:5px 9px;border:1px solid #e0e0e0;border-radius:8px;background:white;cursor:pointer;color:#e53935;">🗑</button>'
         +'</div>'
       +'</div>'
       +'</div>';
   }).join('');
+}
+
+function adjBen(idx, delta) {
+  if(benodigdheden[idx]) { benodigdheden[idx].qty = Math.max(0, (benodigdheden[idx].qty||0) + delta); renderBen(); autosave(); }
 }
 
 function toggleBenApo(idx) {
