@@ -4159,7 +4159,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 </nav>
 
 <!-- GLUCO REACTIEKAART -->
-<div id="gluco-reactie" style="display:none;position:fixed;bottom:82px;left:50%;transform:translateX(-50%);z-index:300;width:calc(100% - 32px);max-width:390px;background:white;border-radius:20px;padding:12px 14px 12px 12px;box-shadow:0 8px 32px rgba(237,90,7,0.22);border:2px solid var(--primary);animation:fi 0.3s ease;">
+<div id="gluco-reactie" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:300;width:calc(100% - 32px);max-width:390px;background:white;border-radius:20px;padding:12px 14px 12px 12px;box-shadow:0 8px 32px rgba(237,90,7,0.22);border:2px solid var(--primary);animation:fi 0.3s ease;">
   <div style="display:flex;align-items:center;gap:10px;">
     <!-- Mini Gluco -->
     <svg viewBox="0 0 60 70" style="width:48px;height:56px;flex-shrink:0;">
@@ -10417,19 +10417,20 @@ function loadPassport() {
   try {
     const raw = localStorage.getItem(PASSPORT_KEY);
     if (!raw) return;
-    const passport = JSON.parse(raw);
-    Object.keys(passport).forEach(function(f) {
+    const _loaded = JSON.parse(raw);
+    Object.assign(passport, _loaded);
+    Object.keys(_loaded).forEach(function(f) {
       if (f.startsWith('_')) return; // skip meta fields
       document.querySelectorAll('[data-field="'+f+'"]').forEach(function(el) {
-        el.textContent = passport[f];
+        el.textContent = _loaded[f];
       });
     });
-    if (passport._ppMeds && Array.isArray(passport._ppMeds)) {
-      ppMeds = passport._ppMeds;
+    if (_loaded._ppMeds && Array.isArray(_loaded._ppMeds)) {
+      ppMeds = _loaded._ppMeds;
       renderPPMedsView();
     }
-    if (passport._ppLongTijd) {
-      ppLongTijd = passport._ppLongTijd;
+    if (_loaded._ppLongTijd) {
+      ppLongTijd = _loaded._ppLongTijd;
     }
     renderPPDosesView();
   } catch(e) { console.warn('loadPassport fout:', e); }
@@ -11307,6 +11308,13 @@ function _doBackgroundAuthSync() {
         updateDoseDisplay();
         refreshPassportHeader();
         initReminders();
+        // Begroeting bijwerken nu passport geladen is via Supabase
+        var _vn = (passport && passport.voornaam) || (obData && obData.voornaam) || '';
+        if (_vn) {
+          _metingMsgs[0] = 'Zullen we even meten, ' + _vn + '?';
+          var _grEl = document.getElementById('inp-s1-greeting');
+          if (_grEl) _grEl.textContent = _metingMsgs[0];
+        }
       }).catch(function(){
         // Cloud sync mislukt — sla lokale data toch op
         _flushPendingSync();
@@ -11325,6 +11333,13 @@ function _doBackgroundAuthSync() {
           renderMeds();
           updateDoseDisplay();
           refreshPassportHeader();
+          // Begroeting bijwerken nu passport geladen is via Supabase
+          var _vn = (passport && passport.voornaam) || (obData && obData.voornaam) || '';
+          if (_vn) {
+            _metingMsgs[0] = 'Zullen we even meten, ' + _vn + '?';
+            var _grEl = document.getElementById('inp-s1-greeting');
+            if (_grEl) _grEl.textContent = _metingMsgs[0];
+          }
         }).catch(function(){ _flushPendingSync(); });
       }
       // Als restore mislukt: app blijft gewoon draaien vanuit localStorage — geen login vereist
