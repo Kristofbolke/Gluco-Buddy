@@ -15317,11 +15317,6 @@ function initAppUI() {
   document.getElementById('nood-btn').style.display='block';
 
   // ── FASE 1: meetscherm onmiddellijk tonen (0ms) ──
-  // Voornaam direct uit localStorage lezen voor inpReset() loopt
-  try {
-    var _pp = JSON.parse(localStorage.getItem('glucoBuddyPassport_v2') || '{}');
-    if (_pp && _pp.voornaam) passport.voornaam = _pp.voornaam;
-  } catch(e) {}
   showSc('input');
   inpReset();
   updateHomeDose((lastGlucose && lastGlucose.value) || 0, 'Na maaltijd');
@@ -15580,6 +15575,7 @@ function inpReset() {
             : (obData && obData.voornaam) ? obData.voornaam
             : (obData && obData.naam) ? obData.naam.split(' ')[0]
             : '';
+  if (!_vn) { try { var _ppLs = JSON.parse(localStorage.getItem('glucoBuddyPassport_v2')||'{}'); _vn = (_ppLs && _ppLs.voornaam) || ''; } catch(e) {} }
   _metingMsgs[0] = _vn ? 'Zullen we even meten, ' + _vn + '?' : 'Zullen we even meten?';
   inpGaStap(1);
   // Toon eerste tekstballon — direct én via timeout als fallback
