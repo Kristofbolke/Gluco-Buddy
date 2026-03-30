@@ -11047,9 +11047,13 @@ async function loadUserData(userId) {
     const _localRaw = localStorage.getItem(STORAGE_KEY);
     const _localObj = _localRaw ? (function(){ try{ return JSON.parse(_localRaw); }catch(e){ return null; }})() : null;
     const _localTime = (_localObj && _localObj.savedAt) ? new Date(_localObj.savedAt).getTime() : 0;
-    if (_localTime > _supaTime) {
-      // Lokale data is nieuwer — push naar cloud, gebruik lokaal
-      // Maar herstel eerst voornaam/naam uit cloud als lokaal die mist
+    // Alleen lokale data gebruiken als die echt inhoud heeft
+    const _heeftLokaleData = _localObj && (
+      (_localObj.glucoseHistory && _localObj.glucoseHistory.length > 0) ||
+      (_localObj.meds && _localObj.meds.length > 0)
+    );
+    if (_localTime > _supaTime && _heeftLokaleData) {
+      // Lokale data is nieuwer én heeft inhoud — push naar cloud, gebruik lokaal
       if (d.passport) {
         if (!passport.voornaam && d.passport.voornaam) passport.voornaam = d.passport.voornaam;
         if (!passport.naam && d.passport.naam) passport.naam = d.passport.naam;
