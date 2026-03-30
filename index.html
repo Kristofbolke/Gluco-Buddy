@@ -15315,6 +15315,16 @@ function initAppUI() {
     updateSensorCard();
     updateAgeDisplay();
     renderHomeAppts();
+    // Begroeting bijwerken na laden passport (voornaam beschikbaar)
+    var _vn = (passport && passport.voornaam) ? passport.voornaam
+              : (obData && obData.voornaam) ? obData.voornaam
+              : (obData && obData.naam) ? obData.naam.split(' ')[0]
+              : '';
+    if (_vn) {
+      _metingMsgs[0] = 'Zullen we even meten, ' + _vn + '?';
+      var _grEl = document.getElementById('inp-s1-greeting');
+      if (_grEl) _grEl.textContent = _metingMsgs[0];
+    }
   }, 30);
 
   // ── FASE 3: grafieken + trends (150ms) ──
