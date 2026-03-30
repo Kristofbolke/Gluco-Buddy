@@ -15317,6 +15317,11 @@ function initAppUI() {
   document.getElementById('nood-btn').style.display='block';
 
   // ── FASE 1: meetscherm onmiddellijk tonen (0ms) ──
+  // Voornaam direct uit localStorage lezen voor inpReset() loopt
+  try {
+    var _pp = JSON.parse(localStorage.getItem('glucoBuddyPassport_v2') || '{}');
+    if (_pp && _pp.voornaam) passport.voornaam = _pp.voornaam;
+  } catch(e) {}
   showSc('input');
   inpReset();
   updateHomeDose((lastGlucose && lastGlucose.value) || 0, 'Na maaltijd');
