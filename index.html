@@ -10332,6 +10332,11 @@ function loadData() {
     if (data.passport) {
       // Nieuw paspoort-object laden
       Object.assign(passport, data.passport);
+      // Herstel voornaam/naam uit obData als passport die mist (legacy migratie-gap)
+      if (!passport.voornaam && data.obData && data.obData.voornaam) {
+        passport.voornaam = data.obData.voornaam;
+        if (!passport.naam && data.obData.naam) passport.naam = data.obData.naam;
+      }
     } else {
       // Fallback: apart opgeslagen passport-model proberen
       try {
@@ -11044,6 +11049,11 @@ async function loadUserData(userId) {
     const _localTime = (_localObj && _localObj.savedAt) ? new Date(_localObj.savedAt).getTime() : 0;
     if (_localTime > _supaTime) {
       // Lokale data is nieuwer — push naar cloud, gebruik lokaal
+      // Maar herstel eerst voornaam/naam uit cloud als lokaal die mist
+      if (d.passport) {
+        if (!passport.voornaam && d.passport.voornaam) passport.voornaam = d.passport.voornaam;
+        if (!passport.naam && d.passport.naam) passport.naam = d.passport.naam;
+      }
       console.log('[Sync] Lokale data is nieuwer dan cloud, push lokaal → Supabase');
       saveUserData();
       return;
