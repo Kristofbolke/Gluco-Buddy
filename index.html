@@ -15579,6 +15579,8 @@ var inpState = {
 function inpReset() {
   inpState = { stap:1, meetmoment:null, meetmomentKey:null, glucose:null, insuline:null, maaltijd:null, basisdosis:null, langdosis:null, kpStr:'' };
   _metingMsgIdx = 0;
+  // DEBUG tijdelijk
+  try { var _ls = JSON.parse(localStorage.getItem('glucoBuddyData_v2')||'null'); console.log('[DEBUG inpReset] passport.voornaam='+JSON.stringify(passport&&passport.voornaam)+' obData.voornaam='+JSON.stringify(obData&&obData.voornaam)+' LS.passport.voornaam='+JSON.stringify(_ls&&_ls.passport&&_ls.passport.voornaam)+' LS.obData.voornaam='+JSON.stringify(_ls&&_ls.obData&&_ls.obData.voornaam)); } catch(e){}
   // Eerste bericht = persoonlijke begroeting
   var _vn = (passport && passport.voornaam) ? passport.voornaam
             : (obData && obData.voornaam) ? obData.voornaam
