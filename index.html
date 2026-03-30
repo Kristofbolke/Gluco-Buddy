@@ -4776,7 +4776,7 @@ function logLong(){
     var upp = lm.unitsPerPen || DEFAULT_IE_PER_PEN[lm.name] || 300;
     if(lm.unit === 'flexpennen' && lm.penIELeft != null) {
       lm.penIELeft = Math.max(0, lm.penIELeft - (tot + 2));
-      lm.qty = (lm.penVoorraad||0) + lm.penIELeft / upp;
+      // penVoorraad/qty veranderen NIET bij dosisregistratie — enkel via "Nieuwe pen"
       stockMsg = name+': '+lm.penIELeft+' IE resterend in huidige pen · '+( lm.penVoorraad||0)+' '+(lm.penVoorraad===1?'pen':'pennen')+' in voorraad';
       if(lm.penIELeft < 20) stockMsg += ' ⚠️ Pen bijna leeg!';
     } else {
@@ -5100,9 +5100,8 @@ function logIns(){
     var _sm = meds[insIdx];
     var upp2 = _sm.unitsPerPen || DEFAULT_IE_PER_PEN[_sm.name] || 300;
     if(_sm.unit === 'flexpennen' && _sm.penIELeft != null) {
-      // Flexpen: enkel van open pen aftrekken
+      // Flexpen: enkel IE van open pen aftrekken — penVoorraad/qty enkel via "Nieuwe pen"
       _sm.penIELeft = Math.max(0, _sm.penIELeft - (doseUnits + 2));
-      _sm.qty = (_sm.penVoorraad||0) + _sm.penIELeft / upp2;
       stockMsg = _sm.name+': '+_sm.penIELeft+' IE resterend in huidige pen · '+(_sm.penVoorraad||0)+' '+((_sm.penVoorraad||0)===1?'pen':'pennen')+' in voorraad';
       if(_sm.penIELeft < 20) {
         showMedToast('⚠️ '+_sm.name+' bijna leeg! Open een nieuwe pen.', 'var(--warn)', 4000);
@@ -6388,11 +6387,12 @@ function renderMeds(){
   function renderSection(arr){
     arr.forEach(function(m){
       var i=meds.indexOf(m);
-      var pct=Math.round((m.qty/m.max)*100);
+      var _stockVal = (m.unit==='flexpennen' && m.penVoorraad != null) ? m.penVoorraad : m.qty;
+      var pct=Math.round((_stockVal/(m.max||1))*100);
       var minSt=m.minStock||0;
-      var isBelowMin=minSt>0&&m.qty<=minSt;
+      var isBelowMin=minSt>0&&_stockVal<=minSt;
       var col=isBelowMin?'var(--danger)':pct>50?'var(--ok)':pct>20?'var(--warn)':'var(--danger)';
-      if(isBelowMin) lowItems.push(m.name+' ('+parseFloat(m.qty.toFixed(1))+' '+m.unit+')');
+      if(isBelowMin) lowItems.push(m.name+' ('+_stockVal+' '+(m.unit==='flexpennen'?(_stockVal===1?'pen':'pennen'):m.unit)+')');
       var icons={'Snelwerkend insuline':'💉','Langwerkend insuline':'🩸','Menginsulline':'💉','Tablet':'💊','Capsule':'💊','Injectie':'💉','Andere':'💊'};
       var ic=icons[m.type]||'💊';
       var expStr=m.exp?'Vervalt: '+m.exp:''; var tijdStr=m.tijdstip?m.tijdstip.split(',').join(' · '):'';
@@ -6667,8 +6667,8 @@ function saveMed(){
     var _existingIELeft = (idx>=0 && meds[idx] && meds[idx].unit==='flexpennen') ? (meds[idx].penIELeft||_upp) : _upp;
     med.penIELeft = _ieLeftInput > 0 ? Math.min(_ieLeftInput, _upp) : _existingIELeft;
     med.unitsPerPen = _upp;
-    med.qty = med.penVoorraad + med.penIELeft / _upp;
-    med.max = Math.max(med.qty, (med.penVoorraad + 1));
+    med.qty = med.penVoorraad;  // voorraad = aantal reserve-pennen; qty daalt enkel via "Nieuwe pen"
+    med.max = med.penVoorraad + 1;
   }
   if(idx>=0) meds[idx]=med; else meds.push(med);
   cancelMedForm();
@@ -13428,7 +13428,7 @@ function openNieuwePen(idx) {
     conf.remove();
     m.penVoorraad = Math.max(0, (m.penVoorraad||0) - 1);
     m.penIELeft = _upp;
-    m.qty = m.penVoorraad + m.penIELeft / _upp;
+    m.qty = m.penVoorraad;
     renderMeds(); autosave();
     showMedToast('✅ Nieuwe pen '+m.name+' geopend · '+m.penVoorraad+' '+(m.penVoorraad===1?'pen':'pennen')+' resterend', 'var(--ok)', 3500);
   };
@@ -16027,7 +16027,12 @@ function inpLogDosis() {
   // Verminder voorraad
   if(medObj){
     var upp=medObj.unitsPerPen||DEFAULT_IE_PER_PEN[medObj.name]||300;
-    medObj.qty=Math.max(0,parseFloat((medObj.qty-(tot+2)/upp).toFixed(3)));
+    if(medObj.unit === 'flexpennen' && medObj.penIELeft != null) {
+      // Flexpen: enkel IE van open pen aftrekken — qty/penVoorraad enkel via "Nieuwe pen"
+      medObj.penIELeft = Math.max(0, medObj.penIELeft - (tot + 2));
+    } else {
+      medObj.qty=Math.max(0,parseFloat((medObj.qty-(tot+2)/upp).toFixed(3)));
+    }
     renderMeds();
   }
   inpState._dosisGeregistreerd = true;
@@ -16103,8 +16108,19 @@ function inpOpslaanAfsluiten() {
     if (snelPen || langPen) {
       var insType = langPen ? 'Langwerkend insuline' : 'Snelwerkend insuline';
       var idx = meds.findIndex(function(m){ return m.type === insType; });
-      if (idx >= 0 && meds[idx].qty > 0) {
-        meds[idx].qty = Math.max(0, parseFloat((meds[idx].qty - 1).toFixed(3)));
+      if (idx >= 0) {
+        var _npm = meds[idx];
+        var _nup = _npm.unitsPerPen || DEFAULT_IE_PER_PEN[_npm.name] || 300;
+        if (_npm.unit === 'flexpennen' && _npm.penIELeft != null) {
+          // Flexpen: trek 1 pen af van reserve-voorraad en reset huidige pen
+          if ((_npm.penVoorraad||0) > 0) {
+            _npm.penVoorraad = Math.max(0, (_npm.penVoorraad||0) - 1);
+            _npm.qty = _npm.penVoorraad;
+          }
+          _npm.penIELeft = _nup;
+        } else if (_npm.qty > 0) {
+          _npm.qty = Math.max(0, parseFloat((_npm.qty - 1).toFixed(3)));
+        }
         renderMeds();
         showMedToast('💉 Nieuwe flexpen geregistreerd — voorraad bijgewerkt', 'var(--primary)', 3000);
       }
