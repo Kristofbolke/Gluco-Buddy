@@ -6494,7 +6494,7 @@ function mfBerekenVoorraad() {
     var totaal = Math.round(epv * av * 10) / 10;
     if(display) display.textContent = (epv > 0 && av > 0) ? totaal + ' ' + unit : '—';
     if(qtyInput && totaal > 0) qtyInput.value = totaal;
-    if(maxInput) { var curMax = parseFloat(maxInput.value)||0; if(totaal > curMax || curMax === 0) maxInput.value = Math.max(totaal * 2, 5); }
+    if(maxInput) maxInput.value = totaal || 1;
     if(unpInput && epv > 0) unpInput.value = epv;
   }
 }
@@ -6677,7 +6677,7 @@ function saveMed(){
     eenhedenPerVerpakking:epv,
     aantalVerpakkingen:av,
     qty:totaal,
-    max:(function(){ var _m=parseInt((document.getElementById('mf-max')||{}).value)||0; return _m > totaal && _m < totaal*20 ? _m : Math.max(totaal*2, totaal+5, 5); })(),
+    max:(function(){ var _m=parseInt((document.getElementById('mf-max')||{}).value)||0; return (_m > 0 && _m >= totaal) ? _m : (totaal || 1); })(),
     minStock:parseInt((document.getElementById('mf-min-stock')||{}).value)||0,
     dosePerIntake:parseFloat((document.getElementById('mf-dose-per')||{}).value)||1,
     tijdstip:(document.getElementById('mf-tijdstip')||{}).value||'',
