@@ -15448,12 +15448,17 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js', { scope: '/' })
       .then(function(reg) {
         console.log('[PWA] Service Worker geregistreerd ✓', reg.scope);
-        // Check voor updates
         reg.addEventListener('updatefound', function() {
           var newWorker = reg.installing;
           newWorker.addEventListener('statechange', function() {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('[PWA] Update beschikbaar — herlaad de pagina voor de nieuwste versie.');
+              // Nieuwe versie klaar — toon update-banner
+              var _ub = document.createElement('div');
+              _ub.id = '_update-banner';
+              _ub.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9999;background:linear-gradient(135deg,#ED5A07,#FF7A30);color:white;border-radius:16px;padding:14px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(237,90,7,0.4);cursor:pointer;font-family:Nunito,sans-serif;white-space:nowrap;';
+              _ub.innerHTML = '<span style="font-size:20px;">🔄</span><div><div style="font-weight:900;font-size:13px;">Update beschikbaar!</div><div style="font-size:11px;opacity:0.9;">Tik hier om de app bij te werken</div></div>';
+              _ub.onclick = function() { window.location.reload(); };
+              document.body.appendChild(_ub);
             }
           });
         });
@@ -15461,6 +15466,10 @@ if ('serviceWorker' in navigator) {
       .catch(function(err) {
         console.warn('[PWA] Service Worker registratie mislukt:', err);
       });
+    // Herlaad automatisch zodra nieuwe SW de controle overneemt
+    navigator.serviceWorker.addEventListener('controllerchange', function() {
+      window.location.reload();
+    });
   });
 }
 
