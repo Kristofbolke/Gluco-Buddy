@@ -3082,6 +3082,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
         <button type="button" class="mf-tijd-btn" data-t="voor" onclick="toggleMfTijd(this)">⬆️ Voor maaltijd</button>
         <button type="button" class="mf-tijd-btn" data-t="tijdens" onclick="toggleMfTijd(this)">🍽️ Tijdens</button>
         <button type="button" class="mf-tijd-btn" data-t="na" onclick="toggleMfTijd(this)">⬇️ Na maaltijd</button>
+        <button type="button" class="mf-tijd-btn" data-t="indien_nodig" onclick="toggleMfTijd(this)">🆘 Indien nodig</button>
       </div>
       <input type="hidden" id="mf-tijdstip" value="">
     </div>
@@ -3105,10 +3106,10 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
           <option>zakjes</option><option>stuks</option>
         </select>
       </div>
-      <div class="ig" style="margin-bottom:0;"><label class="il">Eenheden per verpakking</label><input class="ifl" type="number" id="mf-eenheden-per-verpakking" placeholder="bv. 30" min="1" oninput="mfBerekenVoorraad()"></div>
+      <div class="ig" style="margin-bottom:0;"><label class="il" id="lbl-mf-epv">Eenheden per verpakking</label><input class="ifl" type="number" id="mf-eenheden-per-verpakking" placeholder="bv. 30" min="1" oninput="mfBerekenVoorraad()"></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;align-items:end;">
-      <div class="ig" style="margin-bottom:0;"><label class="il">Verpakkingen in voorraad</label><input class="ifl" type="number" id="mf-aantal-verpakkingen" placeholder="bv. 2" min="0" step="0.5" oninput="mfBerekenVoorraad()"></div>
+      <div class="ig" style="margin-bottom:0;"><label class="il" id="lbl-mf-av">Verpakkingen in voorraad</label><input class="ifl" type="number" id="mf-aantal-verpakkingen" placeholder="bv. 2" min="0" step="0.5" oninput="mfBerekenVoorraad()"></div>
       <div class="ig" style="margin-bottom:0;"><label class="il">Totale voorraad (berekend)</label><div id="mf-totale-voorraad-display" style="padding:10px 12px;background:var(--bg2);border-radius:10px;font-size:14px;font-weight:900;color:var(--primary);border:1.5px solid var(--border);height:42px;display:flex;align-items:center;">—</div></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
@@ -6478,15 +6479,24 @@ function mfBerekenVoorraad() {
   var epv = parseFloat((document.getElementById('mf-eenheden-per-verpakking')||{}).value) || 0;
   var av  = parseFloat((document.getElementById('mf-aantal-verpakkingen')||{}).value) || 0;
   var unit = (document.getElementById('mf-unit')||{}).value || 'stuks';
-  var totaal = Math.round(epv * av * 10) / 10;
   var display = document.getElementById('mf-totale-voorraad-display');
-  if(display) display.textContent = (epv > 0 && av > 0) ? totaal + ' ' + unit : '—';
   var qtyInput = document.getElementById('mf-qty');
   var maxInput = document.getElementById('mf-max');
-  if(qtyInput && totaal > 0) qtyInput.value = totaal;
-  if(maxInput) { var curMax = parseFloat(maxInput.value)||0; if(totaal > curMax) maxInput.value = totaal * 2; }
   var unpInput = document.getElementById('mf-units-per');
-  if(unpInput && epv > 0) unpInput.value = epv;
+  if(unit === 'flexpennen') {
+    // Voor flexpennen: av = aantal pennen, epv = IE per pen
+    var totaalPennen = Math.round(av);
+    if(display) display.textContent = av > 0 ? totaalPennen + ' pennen' + (epv > 0 ? ' (' + (totaalPennen * epv) + ' IE)' : '') : '—';
+    if(qtyInput && av > 0) qtyInput.value = totaalPennen;
+    if(maxInput) maxInput.value = Math.max(totaalPennen + 1, totaalPennen * 2 || 1);
+    if(unpInput && epv > 0) unpInput.value = epv;
+  } else {
+    var totaal = Math.round(epv * av * 10) / 10;
+    if(display) display.textContent = (epv > 0 && av > 0) ? totaal + ' ' + unit : '—';
+    if(qtyInput && totaal > 0) qtyInput.value = totaal;
+    if(maxInput) { var curMax = parseFloat(maxInput.value)||0; if(totaal > curMax || curMax === 0) maxInput.value = Math.max(totaal * 2, 5); }
+    if(unpInput && epv > 0) unpInput.value = epv;
+  }
 }
 
 function toggleUnitsPerField() {
@@ -6496,6 +6506,22 @@ function toggleUnitsPerField() {
   var isPen = unit==='flexpennen'||unit==='flacons'||unit==='ampullen';
   if(wrap) wrap.style.display = isPen ? 'block' : 'none';
   if(penBlok) penBlok.style.display = unit==='flexpennen' ? 'block' : 'none';
+  // Pas labels aan voor flexpennen
+  var lblEpv = document.getElementById('lbl-mf-epv');
+  var lblAv  = document.getElementById('lbl-mf-av');
+  var epvInp = document.getElementById('mf-eenheden-per-verpakking');
+  var avInp  = document.getElementById('mf-aantal-verpakkingen');
+  if(unit === 'flexpennen') {
+    if(lblEpv) lblEpv.textContent = 'IE per pen (bv. 300)';
+    if(lblAv)  lblAv.textContent  = 'Aantal pennen in voorraad';
+    if(epvInp) epvInp.placeholder = 'bv. 300';
+    if(avInp)  avInp.placeholder  = 'bv. 10';
+  } else {
+    if(lblEpv) lblEpv.textContent = 'Eenheden per verpakking';
+    if(lblAv)  lblAv.textContent  = 'Verpakkingen in voorraad';
+    if(epvInp) epvInp.placeholder = 'bv. 30';
+    if(avInp)  avInp.placeholder  = 'bv. 2';
+  }
 }
 
 // Default IE per pen by insulin type name
@@ -6584,14 +6610,15 @@ function openMedForm(idx){
     _setV('mf-dose-per',m.dosePerIntake||1);
     _setV('mf-units-per',m.unitsPerPen||m.eenhedenPerVerpakking||0);
     _setV('mf-detail',m.detail||m.dosering||'');
-    // Flexpen: laad penVoorraad en toon juiste velden
+    // Flexpen: laad penVoorraad en toon juiste velden + pas labels aan
     if(m.unit === 'flexpennen') {
       _setV('mf-aantal-verpakkingen', m.penVoorraad != null ? m.penVoorraad : (m.aantalVerpakkingen||''));
       _setV('mf-pen-ie-left', ''); // leeg laten — huidige waarde bewaren bij opslaan
       var _penBlok = document.getElementById('mf-pen-open-blok');
       if(_penBlok) { _penBlok.style.display = 'block'; var _ph = document.getElementById('mf-pen-ie-left'); if(_ph) _ph.placeholder = 'Huidig: '+(m.penIELeft||m.unitsPerPen||300)+' IE'; }
     }
-    setTimeout(mfBerekenVoorraad,50);
+    setTimeout(toggleUnitsPerField, 50); // update labels na laden unit
+    setTimeout(mfBerekenVoorraad,100);
     setTimeout(function(){ setMedCat(m.cat||'diabetes'); },50);
     setMfTijdstip(m.tijdstip||'');
     mfIndicatieChange();
@@ -6601,7 +6628,7 @@ function openMedForm(idx){
     ['mf-name','mf-sterkte','mf-dosering','mf-frequentie','mf-startdatum','mf-behandelingsduur',
      'mf-voorschrijver','mf-opmerking','mf-eenheden-per-verpakking','mf-aantal-verpakkingen',
      'mf-min-stock','mf-exp','mf-detail','mf-indicatie'].forEach(function(id){ _setV(id,''); });
-    _setV('mf-qty',0); _setV('mf-max',100); _setV('mf-dose-per',1); _setV('mf-units-per',0);
+    _setV('mf-qty',0); _setV('mf-max',0); _setV('mf-dose-per',1); _setV('mf-units-per',0);
     mfIndicatieChange();
     mfVulVoorschrijverLijst();
     var disp=document.getElementById('mf-totale-voorraad-display'); if(disp) disp.textContent='—';
@@ -6650,7 +6677,7 @@ function saveMed(){
     eenhedenPerVerpakking:epv,
     aantalVerpakkingen:av,
     qty:totaal,
-    max:Math.max(totaal, parseInt((document.getElementById('mf-max')||{}).value)||totaal||10),
+    max:(function(){ var _m=parseInt((document.getElementById('mf-max')||{}).value)||0; return _m > totaal && _m < totaal*20 ? _m : Math.max(totaal*2, totaal+5, 5); })(),
     minStock:parseInt((document.getElementById('mf-min-stock')||{}).value)||0,
     dosePerIntake:parseFloat((document.getElementById('mf-dose-per')||{}).value)||1,
     tijdstip:(document.getElementById('mf-tijdstip')||{}).value||'',
@@ -6659,16 +6686,16 @@ function saveMed(){
     exp:(document.getElementById('mf-exp')||{}).value||''
   };
   // Flexpen: aparte penVoorraad en penIELeft
+  // av = aantal pennen (direct ingevoerd), epv = IE per pen
   if(med.unit === 'flexpennen') {
-    var _upp = med.unitsPerPen || DEFAULT_IE_PER_PEN[nm] || 300;
-    med.penVoorraad = Math.max(0, Math.round(av || 0));
+    var _upp = epv || med.unitsPerPen || DEFAULT_IE_PER_PEN[nm] || 300;
+    med.penVoorraad = Math.max(0, Math.round(av || 0)); // av = direct aantal pennen
     var _ieLeftInput = parseFloat((document.getElementById('mf-pen-ie-left')||{}).value)||0;
-    // Bewaar bestaande penIELeft als we bewerken (tenzij gebruiker iets ingevuld heeft)
     var _existingIELeft = (idx>=0 && meds[idx] && meds[idx].unit==='flexpennen') ? (meds[idx].penIELeft||_upp) : _upp;
     med.penIELeft = _ieLeftInput > 0 ? Math.min(_ieLeftInput, _upp) : _existingIELeft;
     med.unitsPerPen = _upp;
-    med.qty = med.penVoorraad;  // voorraad = aantal reserve-pennen; qty daalt enkel via "Nieuwe pen"
-    med.max = med.penVoorraad + 1;
+    med.qty = med.penVoorraad;
+    med.max = Math.max(med.penVoorraad + 1, med.penVoorraad * 2 || 1);
   }
   if(idx>=0) meds[idx]=med; else meds.push(med);
   cancelMedForm();
@@ -13405,32 +13432,37 @@ ${p.lengte || p.gewicht ? `
 function openNieuwePen(idx) {
   var m = meds[idx];
   if(!m || m.unit !== 'flexpennen') return;
-  if((m.penVoorraad||0) <= 0) {
-    showMedToast('⚠️ Geen pens meer in voorraad voor '+m.name+'! Bestel bij.', 'var(--danger)', 4000);
-    return;
-  }
   var _upp = m.unitsPerPen || DEFAULT_IE_PER_PEN[m.name] || 300;
+  var _heeftReserve = (m.penVoorraad||0) > 0;
   // Bevestigingsdialoog
   var conf = document.createElement('div');
   conf.style.cssText = 'position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;padding:20px;';
+  var _subTxt = _heeftReserve
+    ? m.name+' — 1 pen wordt afgetrokken van voorraad<br><strong>'+(m.penVoorraad-1)+'</strong> '+(m.penVoorraad-1===1?'pen':'pennen')+' resterend na openen'
+    : m.name+' — geen reserve meer in voorraad.<br>De huidige pen wordt gereset naar vol. <strong>Bestel tijdig bij!</strong>';
   conf.innerHTML = '<div style="background:white;border-radius:20px;padding:24px;max-width:320px;width:100%;text-align:center;">'
     +'<div style="font-size:32px;margin-bottom:12px;">💉</div>'
-    +'<div style="font-size:16px;font-weight:900;margin-bottom:8px;">Nieuwe pen openen?</div>'
-    +'<div style="font-size:13px;color:var(--muted);font-weight:600;margin-bottom:20px;">'+m.name+' — 1 pen wordt afgetrokken van voorraad<br><strong>'+(m.penVoorraad-1)+'</strong> '+(m.penVoorraad-1===1?'pen':'pennen')+' resterend na openen</div>'
+    +'<div style="font-size:16px;font-weight:900;margin-bottom:8px;">Nieuwe pen gestart?</div>'
+    +'<div style="font-size:13px;color:var(--muted);font-weight:600;margin-bottom:20px;">'+_subTxt+'</div>'
     +'<div style="display:flex;gap:10px;">'
       +'<button id="_np_cancel" style="flex:1;padding:12px;border:2px solid var(--border);border-radius:12px;background:white;font-family:Nunito,sans-serif;font-weight:800;font-size:13px;cursor:pointer;">Annuleren</button>'
-      +'<button id="_np_ok" style="flex:1;padding:12px;border:none;border-radius:12px;background:var(--primary);color:white;font-family:Nunito,sans-serif;font-weight:800;font-size:13px;cursor:pointer;">✅ Openen</button>'
+      +'<button id="_np_ok" style="flex:1;padding:12px;border:none;border-radius:12px;background:var(--primary);color:white;font-family:Nunito,sans-serif;font-weight:800;font-size:13px;cursor:pointer;">✅ Bevestigen</button>'
     +'</div>'
   +'</div>';
   document.body.appendChild(conf);
   conf.querySelector('#_np_cancel').onclick = function(){ conf.remove(); };
   conf.querySelector('#_np_ok').onclick = function(){
     conf.remove();
-    m.penVoorraad = Math.max(0, (m.penVoorraad||0) - 1);
+    if(_heeftReserve) {
+      m.penVoorraad = Math.max(0, (m.penVoorraad||0) - 1);
+      m.qty = m.penVoorraad;
+    }
     m.penIELeft = _upp;
-    m.qty = m.penVoorraad;
     renderMeds(); autosave();
-    showMedToast('✅ Nieuwe pen '+m.name+' geopend · '+m.penVoorraad+' '+(m.penVoorraad===1?'pen':'pennen')+' resterend', 'var(--ok)', 3500);
+    var _msg = _heeftReserve
+      ? '✅ Nieuwe pen '+m.name+' geopend · '+m.penVoorraad+' '+(m.penVoorraad===1?'pen':'pennen')+' resterend'
+      : '💉 Pen '+m.name+' gereset naar vol · Bestel nieuwe pennen bij!';
+    showMedToast(_msg, _heeftReserve ? 'var(--ok)' : 'var(--warn)', 3500);
   };
 }
 
