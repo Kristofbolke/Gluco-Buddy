@@ -14,7 +14,6 @@
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512x512.png">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{--primary:#ED5A07;--pd:#C44A00;--pl:#FF7A30;--acc:#FFB347;--acc2:#FF6B35;--bg:#FBFCFC;--bg2:#FFF5EF;--card:#FFFFFF;--text:#1A1A1A;--muted:#8A6A55;--border:#F0D9CC;--danger:#D63031;--warn:#F39C12;--ok:#27AE60;--low:#2980B9;--r:20px;--sh:0 4px 20px rgba(237,90,7,0.12);}
@@ -9896,6 +9895,9 @@ function renderGoals() {
 }
 
 // ===== BACKUP & SYNC =====
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
 // ── SUPABASE ──────────────────────────────────────────
 const _sb = supabase.createClient(
   'https://puucrpgyaexiiuykdmgr.supabase.co',
